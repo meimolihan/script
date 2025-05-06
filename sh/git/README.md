@@ -5,6 +5,14 @@
 
 - 克隆 docker 项目
 
+
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_clone_docker.sh)
+```
+
+
+
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.sh)
 ```
