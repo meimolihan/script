@@ -51,3 +51,22 @@ wget -c https://gitee.com/meimolihan/script/raw/master/sh/zip/backup-zip.sh && c
 sudo apt install dos2unix
 dos2unix backup-zip.sh
 ```
+
+
+
+### organize_zips.sh
+
+- **在**`/vol2/1000/backup/`**创建**日期文件夹，**将** `/vol1/1000/home/`下的子目录，**压缩为**：`目录名_yyyymmdd.zip`
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/organize_zips.sh)
+```
+
+### daily_backup.sh
+
+- **将**`/vol1/1000/home`目录**压缩为** `compose_yyyymmdd.tar.gz` **保存到** `/vol2/1000/backup` 目录下
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/daily_backup.sh)
+```
+
