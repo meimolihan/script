@@ -53,3 +53,15 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/file_stats.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/file_stats.sh)
 ```
 
+## certbot-mobufan.eu.org.sh
+
+- SSL证书自动续期
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/linux/certbot-mobufan.eu.org.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/certbot-mobufan.eu.org.sh)
+```
+
