@@ -6,7 +6,7 @@
 - 克隆 docker 项目
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/git/git_clone_docker.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_clone_docker.sh)
 ```
 
 
@@ -22,7 +22,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.s
 - `推送更新` 当前Git仓库
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/git/git_push.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push.sh)
 ```
 
 
@@ -36,7 +36,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push.sh)
 - `拉取更新` 当前Git仓库
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/git/git_update.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_update.sh)
 ```
 
 
@@ -50,7 +50,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update.sh)
 - `推送更新+拉取更新` 当前Git仓库
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/git/git_push+update.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push+update.sh)
 ```
 
 
@@ -67,7 +67,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push+update.sh
 - `推送所有更新` 当前目录下的所有有效的Git仓库
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/git/git_push_all.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push_all.sh)
 ```
 
 
@@ -81,7 +81,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push_all.sh)
 - `拉取所有更新` 当前目录下所有有效Git仓库
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/git/git_update_all.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_update_all.sh)
 ```
 
 

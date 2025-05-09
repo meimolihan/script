@@ -7,6 +7,10 @@
 - 遍历当前目录下的子目录压缩为`.zip`文件
 
 ```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/zip/backup-zip.sh)
+```
+
+```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/backup-zip.sh)
 ```
 
@@ -14,6 +18,10 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/backup-zip.sh)
 ### 压缩为`.gz`文件
 
 - 遍历当前目录下的子目录压缩为`.tar.gz`文件
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/zip/backup-gz.sh)
+```
 
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/backup-gz.sh)
@@ -30,12 +38,20 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/backup-gz.sh)
 - 遍历当前目录下的`*.zip`文件,解压到当前目录下
 
 ```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/zip/unzip.sh)
+```
+
+```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/unzip.sh)
 ```
 
 ### 解压  `.tar.gz`  文件
 
 - 遍历当前目录下的`*.tar.gz`文件,解压到当前目录下
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/zip/untar.sh)
+```
 
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/untar.sh)

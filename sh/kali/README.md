@@ -3,7 +3,7 @@
 ## Kali 开机脚本
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/kali/linux-check.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/kali/linux-check.sh)
 ```
 
 ```bash
@@ -18,7 +18,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/linux-check.sh)
 - 清理 Kali 系统
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/kali/clean_kali.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/kali/clean_kali.sh)
 ```
 
 ```bash
@@ -30,7 +30,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/clean_kali.sh)
 - 去除目录下文件名中的空格
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/kali/remove_spaces.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/kali/remove_spaces.sh)
 ```
 
 ```bash
@@ -52,7 +52,7 @@ sudo apt update && sudo apt install ffmpeg -y
 - 提取歌曲封面
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/kali/extract_cover.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/kali/extract_cover.sh)
 ```
 
 ```bash
@@ -64,7 +64,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/extract_cover.sh)
 - 将同名文件放入同名文件夹
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/kali/file_to_folder.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/kali/file_to_folder.sh)
 ```
 
 ```bash
@@ -76,7 +76,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/file_to_folder.sh
 - 修改目录中歌曲名
 
 ```bash
-bash <(curl -sL cdn.jsdelivr.net/gh/meimolihan/script@v1.0.0/sh/kali/batch_rename_media.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/kali/batch_rename_media.sh)
 ```
 
 ```bash
