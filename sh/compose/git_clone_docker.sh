@@ -23,7 +23,7 @@ repo[15]="git@gitee.com:meimolihan/xiaomusic.git"
 repo[16]="git@gitee.com:meimolihan/xunlei.git"
 repo[17]="git@gitee.com:meimolihan/md.git"
 repo[18]="git@gitee.com:meimolihan/easyvoice.git"
-
+repo[19]="git@gitee.com:meimolihan/dpanel.git"
 
 menu() {
     clear
@@ -33,7 +33,7 @@ menu() {
     for index in "${!repo[@]}"; do
         repo_url="${repo[$index]}"
         repo_name=$(basename "$repo_url" .git)
-        echo "$index. 克隆【Docker】仓库：$repo_name"
+        echo "$index. 克隆仓库：$repo_name"
     done
     echo "========================"
     echo "a. 自定义克隆仓库地址"

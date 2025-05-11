@@ -1,6 +1,7 @@
-git config --global --add safe.directory /vol1/1000/home/easyvoice && \
+cd /vol1/1000/home/dpanel && \
+git config --global --add safe.directory /vol1/1000/home/dpanel && \
 git init && \
 git add . && \
 git commit -m "first commit" && \
-git remote add origin git@gitee.com:meimolihan/easyvoice.git && \
+git remote add origin git@gitee.com:meimolihan/dpanel.git && \
 git push -u origin "master"
