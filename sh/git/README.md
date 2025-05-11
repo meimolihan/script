@@ -1,22 +1,5 @@
 ## 远程使用方法
 
-
-### gitee-clone-docker.sh
-
-- 克隆 docker 项目
-
-```bash
-bash <(curl -sL script.meimolihan.eu.org/sh/git/git_clone_docker.sh)
-```
-
-
-
-```bash
-bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.sh)
-```
-
----
-
 ### git_push.sh
 
 - `推送更新` 当前Git仓库
@@ -24,8 +7,6 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.s
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push.sh)
 ```
-
-
 
 ```
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push.sh)

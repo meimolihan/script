@@ -21,6 +21,9 @@ repo[13]="git@gitee.com:meimolihan/tvhelper.git"
 repo[14]="git@gitee.com:meimolihan/uptime-kuma.git"
 repo[15]="git@gitee.com:meimolihan/xiaomusic.git"
 repo[16]="git@gitee.com:meimolihan/xunlei.git"
+repo[17]="git@gitee.com:meimolihan/md.git"
+repo[18]="git@gitee.com:meimolihan/easyvoice.git"
+
 
 menu() {
     clear

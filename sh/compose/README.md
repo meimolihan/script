@@ -1,5 +1,17 @@
 ## 远程使用方法
 
+### gitee-clone-docker.sh
+
+- 克隆 docker 项目
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/compose/git_clone_docker.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/git_clone_docker.sh)
+```
+
 
 ### start_compose.sh
 
