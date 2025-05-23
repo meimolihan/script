@@ -1,0 +1,124 @@
+@echo off
+color 0A
+setlocal enabledelayedexpansion
+
+rem 定义仓库地址，每行一个
+set "repo[1]=git@gitee.com:meimolihan/bat.git"
+set "repo[2]=git@gitee.com:meimolihan/360.git"
+set "repo[3]=git@gitee.com:meimolihan/final-shell.git"
+set "repo[4]=git@gitee.com:meimolihan/clash.git"
+set "repo[5]=git@gitee.com:meimolihan/dism.git"
+set "repo[6]=git@gitee.com:meimolihan/youtube.git"
+set "repo[7]=git@gitee.com:meimolihan/ffmpeg.git"
+set "repo[8]=git@gitee.com:meimolihan/bcuninstaller.git"
+set "repo[9]=git@gitee.com:meimolihan/typora.git"
+set "repo[10]=git@gitee.com:meimolihan/lx-music-desktop.git"
+
+
+rem set "repo[10]=git@gitee.com:meimolihan/my-files.git"
+rem my-files常用软件安装软件
+
+rem 你可以继续添加更多仓库地址，修改索引和地址即可
+
+rem 获取仓库数量
+set "repo_count=0"
+for /l %%i in (1,1,999) do (
+    if defined repo[%%i] (
+        set /a repo_count+=1
+    ) else (
+        goto :break_loop
+    )
+)
+:break_loop
+
+:menu
+cls
+echo 请选择要克隆的仓库：
+echo ========================
+for /l %%i in (1,1,!repo_count!) do (
+    if defined repo[%%i] (
+        rem 提取仓库名
+        set "repo_url=!repo[%%i]!"
+        for /f "tokens=2 delims=/" %%a in ("!repo_url:*.com:=!") do (
+            set "repo_name=%%~na"
+            echo %%i. 克隆仓库：!repo_name!
+        )
+    )
+)
+echo ========================
+echo x. 克隆所有仓库
+echo a. 添加新的仓库
+echo 0. 退出
+echo ========================
+
+set /p choice=请输入选项: 
+
+rem 转换为小写以便不区分大小写比较
+set "lc_choice=%choice%"
+if "%choice%" neq "" (
+    for /f "delims=" %%c in ('powershell -command "'%choice%'.ToLower()"') do (
+        set "lc_choice=%%c"
+    )
+)
+
+if "%lc_choice%"=="0" (
+    exit /b
+)
+
+if "%lc_choice%"=="x" (
+    echo 正在准备克隆所有仓库...
+    echo ========================
+    set "all_success=1"
+    
+    for /l %%i in (1,1,!repo_count!) do (
+        if defined repo[%%i] (
+            set "repo_url=!repo[%%i]!"
+            for /f "tokens=2 delims=/" %%a in ("!repo_url:*.com:=!") do (
+                set "repo_name=%%~na"
+                echo 正在克隆仓库：!repo_name!
+                git clone !repo[%%i]! || (
+                    echo [错误] 克隆仓库：!repo_name! 失败
+                    set "all_success=0"
+                )
+                echo.
+            )
+        )
+    )
+    
+    if !all_success! equ 1 (
+        echo 所有仓库克隆成功！
+    ) else (
+        echo 部分仓库克隆失败，请检查网络或仓库地址。
+    )
+    
+    pause
+    goto menu
+)
+
+if "%lc_choice%"=="a" (
+    set /a repo_count+=1
+    set /p "new_repo=请输入新的仓库地址: "
+    set "repo[!repo_count!]=!new_repo!"
+    echo 已添加新仓库！
+    pause
+    goto menu
+)
+
+if %choice% geq 1 if %choice% leq !repo_count! (
+    if defined repo[%choice%] (
+        set "repo_url=!repo[%choice%]!"
+        for /f "tokens=2 delims=/" %%a in ("!repo_url:*.com:=!") do (
+            set "repo_name=%%~na"
+            echo 正在克隆仓库：!repo_name!
+            git clone !repo[%choice%]! || (
+                echo [错误] 克隆仓库：!repo_name! 失败
+            )
+        )
+        pause
+        goto menu
+    )
+)
+
+echo 无效的选项，请重新输入。
+pause
+goto menu

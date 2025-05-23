@@ -42,8 +42,6 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push.sh)
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_update.sh)
 ```
 
-
-
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update.sh)
 ```
@@ -55,8 +53,6 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update.sh)
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push+update.sh)
 ```
-
-
 
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push+update.sh)
@@ -73,8 +69,6 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push+update.sh
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push_all.sh)
 ```
 
-
-
 ```
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push_all.sh)
 ```
@@ -87,8 +81,6 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push_all.sh)
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_update_all.sh)
 ```
 
-
-
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update_all.sh)
 ```
@@ -99,8 +91,14 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update_all.sh)
 - Git 项目管理
 
 ```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git-manager-tool.sh)
+```
+
+```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git-manager-tool.sh)
 ```
+
+
 
 ### gitee_new_godown.sh
 
@@ -133,7 +131,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/github_new_godown.
 - 克隆 `GitHub` 用户所有公开仓库
 
 ```bash
-bash <(curl -sL script.meimolihan.eu.org/sh/git/github_new_godown.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/github-user-clone-all.sh)
 ```
 
 ```bash
@@ -145,11 +143,11 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/github-user-clone-
 - 克隆 `Gitee` 用户所有公开仓库
 
 ```bash
-bash <(curl -sL script.meimolihan.eu.org/sh/git/github_new_godown.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/git/gitee-user-clone-all.sh)
 ```
 
 ```bash
-bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/github-user-clone-all.sh)
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitee-user-clone-all.sh)
 ```
 
 
