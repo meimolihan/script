@@ -1,5 +1,27 @@
 ## 远程使用方法
 
+## allinssl_nginx_cert.sh
+
+- 将 `allinssl` 生成的证书同步到 `nginx`
+- 检查到`/etc/nginx/keyfile/cert.pem`证书到期不足（18天）自动同步
+
+```
+# 这是脚本的作用
+cp /mnt/mydisk/home/allinssl/data/mobufan.eu.org.pem /etc/nginx/keyfile/cert.pem
+cp /mnt/mydisk/home/allinssl/data/mobufan.eu.org.key /etc/nginx/keyfile/key.pem
+sudo systemctl restart nginx
+```
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/linux/allinssl_nginx_cert.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/allinssl_nginx_cert.sh)
+```
+
+
+
 ## install_common_packages.sh
 
 - **Linux系统安装常用软件**
