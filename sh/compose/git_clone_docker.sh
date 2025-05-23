@@ -104,16 +104,42 @@ menu() {
     fi
 
     if [ "$lc_choice" = "y" ]; then
-        read -p "请输入自定义仓库克隆地址: " custom_repo
-        read -p "请输入仓库中文注释: " custom_comment
-        repo_name=$(basename "$custom_repo" .git)
-        echo -e "${GREEN}正在克隆仓库：${custom_comment}--$repo_name${NC}"
-        git clone "$custom_repo"
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}[成功] 克隆仓库：${custom_comment}--$repo_name 完成${NC}"
-        else
-            echo -e "${GREEN}[错误] 克隆仓库：${custom_comment}--$repo_name 失败${NC}"
-        fi
+    clear
+    echo -e "${GREEN}=======================================${NC}"
+    echo -e "${GREEN}               Git 克隆仓库${NC}"
+    echo -e "${GREEN}=======================================${NC}"
+    read -p "请输入Git仓库的URL或git clone命令: " repoUrl
+
+    if [ -z "$repoUrl" ]; then
+        echo -e "${RED}未输入有效的URL，请重新运行脚本并输入正确的URL。${NC}"
+        read -p "按任意键返回克隆菜单..."
+        return
+    fi
+
+    # 清理URL
+    cleanUrl=$repoUrl
+    cleanUrl=${cleanUrl#*git clone }
+    cleanUrl=${cleanUrl#*git clone=}
+
+    # 提取仓库名称
+    repoName=$cleanUrl
+    repoName=${repoName##*/}
+    repoName=${repoName%.git}
+
+    echo -e "${GREEN}=======================================${NC}"
+    echo
+    echo -e "${GREEN}正在克隆仓库 \"${repoName}\", 请稍候...${NC}"
+    echo -e "${GREEN}=======================================${NC}"
+    echo
+    echo -e "${GREEN}=======================================${NC}"
+    git clone "$cleanUrl"
+    echo -e "${GREEN}=======================================${NC}"
+
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}仓库 \"${repoName}\"，克隆失败，请检查URL是否正确或网络连接。${NC}"
+    else
+        echo -e "${GREEN}仓库 \"${repoName}\"，克隆成功！${NC}"
+    fi
         read -p "按回车键继续..."
         menu
     fi
