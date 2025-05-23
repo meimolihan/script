@@ -19,10 +19,12 @@ set "repo[13]=git@gitee.com:meimolihan/tvhelper.git"
 set "repo[14]=git@gitee.com:meimolihan/uptime-kuma.git"
 set "repo[15]=git@gitee.com:meimolihan/xiaomusic.git"
 set "repo[16]=git@gitee.com:meimolihan/xunlei.git"
+set "repo[17]=git@gitee.com:meimolihan/md.git"
+set "repo[18]=git@gitee.com:meimolihan/easyvoice.git"
+set "repo[19]=git@gitee.com:meimolihan/dpanel.git"
+set "repo[20]=git@gitee.com:meimolihan/libretv.git"
+set "repo[21]=git@gitee.com:meimolihan/metube.git"
 
-
-rem set "repo[10]=git@gitee.com:meimolihan/my-files.git"
-rem my-files常用软件安装软件
 
 rem 你可以继续添加更多仓库地址，修改索引和地址即可
 
@@ -53,7 +55,7 @@ for /l %%i in (1,1,!repo_count!) do (
 )
 echo ========================
 echo x. 克隆所有仓库
-echo a. 添加新的仓库
+echo y. 添加新的仓库
 echo 0. 退出
 echo ========================
 
@@ -61,8 +63,8 @@ set /p choice=请输入选项:
 
 rem 转换为小写以便不区分大小写比较
 set "lc_choice=%choice%"
-if "%choice%" neq "" (
-    for /f "delims=" %%c in ('powershell -command "'%choice%'.ToLower()"') do (
+if not "%choice%"=="" (
+    for /f "delims=" %%c in ('powershell -command "$env:choice.ToLower()"') do (
         set "lc_choice=%%c"
     )
 )
@@ -101,11 +103,19 @@ if "%lc_choice%"=="x" (
     goto menu
 )
 
-if "%lc_choice%"=="a" (
+if "%lc_choice%"=="y" (
     set /a repo_count+=1
     set /p "new_repo=请输入新的仓库地址: "
     set "repo[!repo_count!]=!new_repo!"
     echo 已添加新仓库！
+    pause
+    goto menu
+)
+
+rem 验证用户输入是否为数字
+echo %choice% | findstr /r "^[0-9][0-9]*$" >nul
+if errorlevel 1 (
+    echo 无效的选项，请重新输入。
     pause
     goto menu
 )

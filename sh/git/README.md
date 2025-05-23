@@ -1,4 +1,15 @@
 ## 远程使用方法
+
+### git_clone.sh
+
+- 克隆仓库（兼容URL或git clone命令）
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_clone.sh)
+```
+
+
+
 ### git_ssh_config.sh
 - Git SSH 配置脚本
 
