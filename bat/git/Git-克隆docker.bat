@@ -3,16 +3,22 @@ color 0A
 setlocal enabledelayedexpansion
 
 rem 定义仓库地址，每行一个
-set "repo[1]=git@gitee.com:meimolihan/bat.git"
-set "repo[2]=git@gitee.com:meimolihan/360.git"
-set "repo[3]=git@gitee.com:meimolihan/final-shell.git"
-set "repo[4]=git@gitee.com:meimolihan/clash.git"
-set "repo[5]=git@gitee.com:meimolihan/dism.git"
-set "repo[6]=git@gitee.com:meimolihan/youtube.git"
-set "repo[7]=git@gitee.com:meimolihan/ffmpeg.git"
-set "repo[8]=git@gitee.com:meimolihan/bcuninstaller.git"
-set "repo[9]=git@gitee.com:meimolihan/typora.git"
-set "repo[10]=git@gitee.com:meimolihan/lx-music-desktop.git"
+set "repo[1]=git@gitee.com:meimolihan/1panel.git"
+set "repo[2]=git@gitee.com:meimolihan/aipan.git"
+set "repo[3]=git@gitee.com:meimolihan/alist.git"
+set "repo[4]=git@gitee.com:meimolihan/home.git"
+set "repo[5]=git@gitee.com:meimolihan/emby.git"
+set "repo[6]=git@gitee.com:meimolihan/halo.git"
+set "repo[7]=git@gitee.com:meimolihan/istoreos.git"
+set "repo[8]=git@gitee.com:meimolihan/it-tools.git"
+set "repo[9]=git@gitee.com:meimolihan/kspeeder.git"
+set "repo[10]=git@gitee.com:meimolihan/nastools.git"
+set "repo[11]=git@gitee.com:meimolihan/random-pic-api.git"
+set "repo[12]=git@gitee.com:meimolihan/sun-panel.git"
+set "repo[13]=git@gitee.com:meimolihan/tvhelper.git"
+set "repo[14]=git@gitee.com:meimolihan/uptime-kuma.git"
+set "repo[15]=git@gitee.com:meimolihan/xiaomusic.git"
+set "repo[16]=git@gitee.com:meimolihan/xunlei.git"
 
 
 rem set "repo[10]=git@gitee.com:meimolihan/my-files.git"
