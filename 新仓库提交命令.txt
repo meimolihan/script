@@ -5,3 +5,15 @@ git add . && \
 git commit -m "first commit" && \
 git remote add origin git@gitee.com:meimolihan/dpanel.git && \
 git push -u origin "master"
+
+
+Gitee 新仓库提交脚本
+
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitee_new_godown.sh)
+
+
+
+
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_https_config.sh)
+
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_ssh_config.sh)

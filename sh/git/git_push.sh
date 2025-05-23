@@ -34,9 +34,8 @@ fi
 echo "正在添加所有更改到暂存区..."
 git add .
 
-# 检查是否有更改需要提交
-if [ -z "$(git diff --cached --name-only)" ]; then
-  echo "没有检测到任何更改，无需提交。"
+if [[ -z $(git status --porcelain) ]]; then
+  echo "无变更，无需提交"
   exit 0
 fi
 

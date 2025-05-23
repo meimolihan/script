@@ -43,22 +43,26 @@ repo[18]="git@gitee.com:meimolihan/easyvoice.git"
 comment[18]="语音转文字"
 repo[19]="git@gitee.com:meimolihan/dpanel.git"
 comment[19]="Docker面板"
+repo[20]="git@gitee.com:meimolihan/libretv.git"
+comment[20]="影视"
+repo[21]="git@gitee.com:meimolihan/metube.git"
+comment[21]="视频下载"
 
 menu() {
     clear
-    echo "请选择要克隆的仓库："
-    echo "========================"
+    echo -e "${GREEN}请选择要克隆的仓库：${NC}"
+    echo -e "${GREEN}========================${NC}"
     # 使用索引遍历所有仓库
     for index in "${!repo[@]}"; do
         repo_url="${repo[$index]}"
         repo_name=$(basename "$repo_url" .git)
-        echo "$index. ${comment[$index]}--$repo_name"
+        echo -e "${GREEN}$index. ${comment[$index]}--$repo_name${NC}"
     done
-    echo "========================"
-    echo "a. 自定义克隆仓库地址"
-    echo "x. 克隆所有仓库"
-    echo "0. 退出"
-    echo "========================"
+    echo -e "${GREEN}========================${NC}"
+    echo -e "${GREEN}x. 克隆所有仓库${NC}"
+    echo -e "${GREEN}y. 自定义克隆仓库${NC}"
+    echo -e "${GREEN}0. 退出${NC}"
+    echo -e "${GREEN}========================${NC}"
 
     read -p "请输入选项: " choice
 
@@ -71,44 +75,44 @@ menu() {
     fi
 
     if [ "$lc_choice" = "x" ]; then
-        echo "正在准备克隆所有仓库..."
-        echo "========================"
+        echo -e "${GREEN}正在准备克隆所有仓库...${NC}"
+        echo -e "${GREEN}========================${NC}"
         all_success=1
         
         for index in "${!repo[@]}"; do
             repo_url="${repo[$index]}"
             repo_name=$(basename "$repo_url" .git)
-            echo "正在克隆仓库：${comment[$index]}--$repo_name"
+            echo -e "${GREEN}正在克隆仓库：${comment[$index]}--$repo_name${NC}"
             git clone "${repo[$index]}"
             if [ $? -ne 0 ]; then
-                echo "[错误] 克隆仓库：${comment[$index]}--$repo_name 失败"
+                echo -e "${GREEN}[错误] 克隆仓库：${comment[$index]}--$repo_name 失败${NC}"
                 all_success=0
             else
-                echo "[成功] 克隆仓库：${comment[$index]}--$repo_name 完成"
+                echo -e "${GREEN}[成功] 克隆仓库：${comment[$index]}--$repo_name 完成${NC}"
             fi
             echo
         done
         
         if [ $all_success -eq 1 ]; then
-            echo "所有仓库克隆成功！"
+            echo -e "${GREEN}所有仓库克隆成功！${NC}"
         else
-            echo "部分仓库克隆失败，请检查网络或仓库地址。"
+            echo -e "${GREEN}部分仓库克隆失败，请检查网络或仓库地址。${NC}"
         fi
         
         read -p "按回车键继续..."
         menu
     fi
 
-    if [ "$lc_choice" = "a" ]; then
+    if [ "$lc_choice" = "y" ]; then
         read -p "请输入自定义仓库克隆地址: " custom_repo
         read -p "请输入仓库中文注释: " custom_comment
         repo_name=$(basename "$custom_repo" .git)
-        echo "正在克隆仓库：${custom_comment}--$repo_name"
+        echo -e "${GREEN}正在克隆仓库：${custom_comment}--$repo_name${NC}"
         git clone "$custom_repo"
         if [ $? -eq 0 ]; then
-            echo "[成功] 克隆仓库：${custom_comment}--$repo_name 完成"
+            echo -e "${GREEN}[成功] 克隆仓库：${custom_comment}--$repo_name 完成${NC}"
         else
-            echo "[错误] 克隆仓库：${custom_comment}--$repo_name 失败"
+            echo -e "${GREEN}[错误] 克隆仓库：${custom_comment}--$repo_name 失败${NC}"
         fi
         read -p "按回车键继续..."
         menu
@@ -119,20 +123,26 @@ menu() {
         if [ -n "${repo[$choice]}" ]; then
             repo_url="${repo[$choice]}"
             repo_name=$(basename "$repo_url" .git)
-            echo "正在克隆仓库：${comment[$choice]}--$repo_name"
+            echo -e "${GREEN}==================================${NC}"
+            echo -e "${GREEN}正在克隆仓库：${comment[$choice]}--$repo_name${NC}"
+            echo -e "${GREEN}==================================${NC}"
             git clone "${repo[$choice]}"
             if [ $? -eq 0 ]; then
-                echo "[成功] 克隆仓库：${comment[$choice]}--$repo_name 完成"
+                echo -e "${GREEN}==================================${NC}"
+                echo -e "${GREEN}[成功] 克隆仓库：${comment[$choice]}--$repo_name 完成${NC}"
+                echo -e "${GREEN}==================================${NC}"
             else
-                echo "[错误] 克隆仓库：${comment[$choice]}--$repo_name 失败"
+                echo -e "${GREEN}==================================${NC}"
+                echo -e "${GREEN}[错误] 克隆仓库：${comment[$choice]}--$repo_name 失败${NC}"
+                echo -e "${GREEN}==================================${NC}"
             fi
             read -p "按回车键继续..."
             menu
         else
-            echo "无效的选项，请重新输入。"
+            echo -e "${GREEN}无效的选项，请重新输入。${NC}"
         fi
     else
-        echo "无效的选项，请重新输入。"
+        echo -e "${GREEN}无效的选项，请重新输入。${NC}"
     fi
 
     read -p "按回车键继续..."

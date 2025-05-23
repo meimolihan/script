@@ -91,6 +91,7 @@ SETLOCAL EnableDelayedExpansion
     exit /b 0
 
 :ShowMessage
+    color 0A
     ECHO ============================================
     ECHO µ±Ç°Git²Ö¿â£º%REPO_PATH%
     ECHO ============================================
