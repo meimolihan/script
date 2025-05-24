@@ -64,6 +64,12 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/time_based_greet
 
 ## file_stats.sh
 
+- 首先安装 `bc`
+
+```bash
+sudo apt update && sudo apt install bc -y
+```
+
 - 统计当前目录文件个数（普通文件和隐藏文件）
 - 统计当前目录文件大小
 
