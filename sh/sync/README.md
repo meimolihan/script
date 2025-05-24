@@ -14,9 +14,8 @@ bash <(curl -sL script.meimolihan.eu.org/sh/sync/fnos-sync-aliyun-script.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/sync/fnos-sync-aliyun-script.sh)
 ```
 
-- 本地脚本
+- 本地脚本（`Git Bash 下载命令`）
 
 ```bash
-wget -c https://gitee.com/meimolihan/script/raw/master/sh/sync/fnos-sync-aliyun-script.sh
+curl -O https://script.meimolihan.eu.org/sh/sync/fnos-sync-aliyun-script.sh
 ```
-

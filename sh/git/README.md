@@ -163,11 +163,11 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitee-user-clone-a
 
 
 
-## 本地使用方法
+## 本地脚本（`Git Bash 下载命令`）
 
 ```bash
 cd /mnt/test # 进入仓库目录
-wget -c https://gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.sh && chmod +x git_clone_docker.sh && bash git_clone_docker.sh
+curl -O https://gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.sh && chmod +x git_clone_docker.sh && bash git_clone_docker.sh
 
 sudo apt install dos2unix
 dos2unix git_clone_docker.sh
