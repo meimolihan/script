@@ -25,3 +25,15 @@ bash <(curl -sL script.meimolihan.eu.org/sh/compose/start_compose.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/start_compose.sh)
 ```
 
+### stop_compose.sh
+
+- 遍历当前目录（所有子目录）下的docker-compose.yml文件，停止并删除
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/compose/stop_compose.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/stop_compose.sh)
+```
+
