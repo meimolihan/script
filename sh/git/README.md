@@ -1,5 +1,17 @@
 ## 远程使用方法
 
+### fnos_docker_push_all.sh
+
+- Win11 `Git Bash` 终端执行该命令
+
+- 进入 `FnOS`服务器，再进入 `/vol1/1000/home`目录执行 `Git` 推送命令
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/fnos_docker_push_all.sh)
+```
+
+
+
 ### git_clone.sh
 
 - 克隆仓库（兼容URL或git clone命令）
