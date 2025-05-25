@@ -37,3 +37,16 @@ bash <(curl -sL script.meimolihan.eu.org/sh/compose/stop_compose.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/stop_compose.sh)
 ```
 
+### docker_load_all_images.sh
+
+- 自动遍历当前目录下的所有`.tar`和`.tar.gz`文件，使用`docker load`命令加载 Docker 镜像，并显示加载结果和统计信息。
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/compose/docker_load_all_images.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/docker_load_all_images.sh)
+```
+
+### 
