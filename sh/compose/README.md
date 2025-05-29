@@ -1,5 +1,13 @@
 ## 远程使用方法
 
+### docker-compose-update.sh
+
+- 该脚本用于遍历指定目录下的子目录（过滤隐藏目录且检查docker-compose.yml存在性），依次对每个子目录执行容器停止、拉取最新镜像、后台重启容器及清理无用镜像的操作。
+
+```bash
+cd /vol1/1000/home && bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/docker-compose-update.sh)
+```
+
 ### gitee-clone-docker.sh
 
 - 克隆 docker 项目

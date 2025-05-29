@@ -1,5 +1,13 @@
 ## 远程使用方法
 
+## wallpaper-directory-stats.sh
+
+- 查看随机壁纸所有目录统计
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper-directory-stats.sh)
+```
+
 ## allinssl_nginx_cert.sh
 
 - 将 `allinssl` 生成的证书同步到 `nginx`
