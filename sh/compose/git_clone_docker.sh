@@ -47,6 +47,9 @@ repo[20]="git@gitee.com:meimolihan/libretv.git"
 comment[20]="影视"
 repo[21]="git@gitee.com:meimolihan/metube.git"
 comment[21]="视频下载"
+repo[22]="git@gitee.com:meimolihan/taoSync.git"
+comment[21]="云盘同步"
+
 
 menu() {
     clear
