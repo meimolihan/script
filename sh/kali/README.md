@@ -20,7 +20,6 @@ wget -c https://script.meimolihan.eu.org/sh/kali/linux-check.sh -O /etc/profile.
 wget -c https://gitee.com/meimolihan/script/raw/master/sh/kali/linux-check.sh -O /etc/profile.d/linux-check.sh && chmod +x /etc/profile.d/linux-check.sh && bash /etc/profile.d/linux-check.sh
 ```
 
-
 ### clean_kali.sh
 
 - 清理 Kali 系统
@@ -45,8 +44,6 @@ bash <(curl -sL script.meimolihan.eu.org/sh/kali/remove_spaces.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/remove_spaces.sh)
 ```
 
-
-
 ## extract_cover.sh
 
 - 安装 ffmpeg
@@ -54,8 +51,6 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/remove_spaces.sh)
 ```bash
 sudo apt update && sudo apt install ffmpeg -y
 ```
-
-
 
 - 提取歌曲封面
 
@@ -90,4 +85,3 @@ bash <(curl -sL script.meimolihan.eu.org/sh/kali/batch_rename_media.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/kali/batch_rename_media.sh)
 ```
-

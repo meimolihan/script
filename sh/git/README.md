@@ -10,19 +10,16 @@
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/fnos_docker_push_all.sh)
 ```
 
-
-
 ### git_clone.sh
 
-- 克隆仓库（兼容URL或git clone命令）
+- 克隆仓库（兼容 URL 或 git clone 命令）
 
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_clone.sh)
 ```
 
-
-
 ### git_ssh_config.sh
+
 - Git SSH 配置脚本
 
 ```bash
@@ -30,9 +27,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_ssh_config.sh)
 git add . ; git commit -m "update" ; git push
 ```
 
-![](https://file.meimolihan.eu.org/screenshot/git_ssh_config.webp) 
-
-
+![](https://file.meimolihan.eu.org/screenshot/git_ssh_config.webp)
 
 ### git_https_config.sh
 
@@ -47,7 +42,7 @@ git add . ; git commit -m "update" ; git push
 
 ### git_push.sh
 
-- `推送更新` 当前Git仓库
+- `推送更新` 当前 Git 仓库
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push.sh)
@@ -59,7 +54,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push.sh)
 
 ### git_update.sh
 
-- `拉取更新` 当前Git仓库
+- `拉取更新` 当前 Git 仓库
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_update.sh)
@@ -71,7 +66,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update.sh)
 
 ### git_push+update.sh
 
-- `推送更新+拉取更新` 当前Git仓库
+- `推送更新+拉取更新` 当前 Git 仓库
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push+update.sh)
@@ -83,10 +78,9 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push+update.sh
 
 ---
 
-
 ### git_push_all.sh
 
-- `推送所有更新` 当前目录下的所有有效的Git仓库
+- `推送所有更新` 当前目录下的所有有效的 Git 仓库
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_push_all.sh)
@@ -98,7 +92,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_push_all.sh)
 
 ### git_update_all.sh
 
-- `拉取所有更新` 当前目录下所有有效Git仓库
+- `拉取所有更新` 当前目录下所有有效 Git 仓库
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/git/git_update_all.sh)
@@ -111,6 +105,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_update_all.sh)
 ---
 
 ### git-manager-tool.sh
+
 - Git 项目管理
 
 ```bash
@@ -120,8 +115,6 @@ bash <(curl -sL script.meimolihan.eu.org/sh/git/git-manager-tool.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git-manager-tool.sh)
 ```
-
-
 
 ### gitee_new_godown.sh
 
@@ -134,8 +127,6 @@ bash <(curl -sL script.meimolihan.eu.org/sh/git/gitee_new_godown.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitee_new_godown.sh)
 ```
-
-
 
 ### github_new_godown.sh
 
@@ -173,8 +164,6 @@ bash <(curl -sL script.meimolihan.eu.org/sh/git/gitee-user-clone-all.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitee-user-clone-all.sh)
 ```
 
-
-
 ## 本地脚本（`Git Bash 下载命令`）
 
 ```bash
@@ -184,6 +173,3 @@ curl -O https://gitee.com/meimolihan/script/raw/master/sh/git/git_clone_docker.s
 sudo apt install dos2unix
 dos2unix git_clone_docker.sh
 ```
-
-
-

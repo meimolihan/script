@@ -2,7 +2,7 @@
 
 ### docker-compose-update.sh
 
-- 该脚本用于遍历指定目录下的子目录（过滤隐藏目录且检查docker-compose.yml存在性），依次对每个子目录执行容器停止、拉取最新镜像、后台重启容器及清理无用镜像的操作。
+- 该脚本用于遍历指定目录下的子目录（过滤隐藏目录且检查 docker-compose.yml 存在性），依次对每个子目录执行容器停止、拉取最新镜像、后台重启容器及清理无用镜像的操作。
 
 ```bash
 cd /vol1/1000/home && bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/docker-compose-update.sh)
@@ -20,10 +20,9 @@ bash <(curl -sL script.meimolihan.eu.org/sh/compose/git_clone_docker.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/git_clone_docker.sh)
 ```
 
-
 ### start_compose.sh
 
-- 遍历当前目录（所有子目录）下的docker-compose.yml文件，构建并启动
+- 遍历当前目录（所有子目录）下的 docker-compose.yml 文件，构建并启动
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/compose/start_compose.sh)
@@ -35,7 +34,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/start_compose.
 
 ### stop_compose.sh
 
-- 遍历当前目录（所有子目录）下的docker-compose.yml文件，停止并删除
+- 遍历当前目录（所有子目录）下的 docker-compose.yml 文件，停止并删除
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/compose/stop_compose.sh)
@@ -56,5 +55,3 @@ bash <(curl -sL script.meimolihan.eu.org/sh/compose/docker_load_all_images.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/docker_load_all_images.sh)
 ```
-
-### 

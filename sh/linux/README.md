@@ -11,7 +11,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper-direct
 ## allinssl_nginx_cert.sh
 
 - 将 `allinssl` 生成的证书同步到 `nginx`
-- 检查到`/etc/nginx/keyfile/cert.pem`证书到期不足（18天）自动同步
+- 检查到`/etc/nginx/keyfile/cert.pem`证书到期不足（18 天）自动同步
 
 ```
 # 这是脚本的作用
@@ -28,11 +28,9 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/allinssl_nginx_cert.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/allinssl_nginx_cert.sh)
 ```
 
-
-
 ## install_common_packages.sh
 
-- **Linux系统安装常用软件**
+- **Linux 系统安装常用软件**
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/linux/install_common_packages.sh)
@@ -41,8 +39,6 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/install_common_packages.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/install_common_packages.sh)
 ```
-
-
 
 ## ping_based_host_finder.sh
 
@@ -55,8 +51,6 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/ping_based_host_finder.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/ping_based_host_finder.sh)
 ```
-
-
 
 ## time_based_greeting.sh
 
@@ -91,7 +85,7 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/file_stats.sh)
 
 ## certbot-mobufan.eu.org.sh
 
-- SSL证书自动续期
+- SSL 证书自动续期
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/linux/certbot-mobufan.eu.org.sh)
@@ -100,4 +94,3 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/certbot-mobufan.eu.org.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/certbot-mobufan.eu.org.sh)
 ```
-
