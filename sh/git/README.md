@@ -164,6 +164,18 @@ bash <(curl -sL script.meimolihan.eu.org/sh/git/gitee-user-clone-all.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitee-user-clone-all.sh)
 ```
 
+### git_rm_cached.sh
+
+- 遍历指定目录下的所有子目录中的有效 Git 仓库，对每个仓库执行 git rm --cached -r . 命令以清除缓存文件。
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/git/git_rm_cached.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_rm_cached.sh)
+```
+
 ## 本地脚本（`Git Bash 下载命令`）
 
 ```bash
