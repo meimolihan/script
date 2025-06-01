@@ -1,5 +1,13 @@
 ## 远程使用方法
 
+### gitignore-batch-updater.sh
+
+- 这个脚本会自动为当前目录下的所有直接子目录（不包括更深层级的子目录）添加或更新 .gitignore 文件，确保其中包含忽略 .log 文件的规则。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/gitignore-batch-updater.sh)
+```
+
 ### fnos_docker_push_all.sh
 
 - Win11 `Git Bash` 终端执行该命令
