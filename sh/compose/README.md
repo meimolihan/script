@@ -10,7 +10,9 @@ cd /vol1/1000/home && bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/
 
 ### gitee-clone-docker.sh
 
-- 克隆 docker 项目
+![](https://file.meimolihan.eu.org/screenshot/git-clone-docker-001.webp)
+
+- 克隆 `docker`  全部项目
 
 ```bash
 bash <(curl -sL script.meimolihan.eu.org/sh/compose/git_clone_docker.sh)
@@ -18,6 +20,20 @@ bash <(curl -sL script.meimolihan.eu.org/sh/compose/git_clone_docker.sh)
 
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/git_clone_docker.sh)
+```
+
+### git_clone_windows.sh
+
+![](https://file.meimolihan.eu.org/screenshot/git_clone_windows-001.webp) 
+
+- 克隆 `windows` 全部项目
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/compose/git_clone_windows.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/git_clone_windows.sh)
 ```
 
 ### start_compose.sh
