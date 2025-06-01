@@ -49,7 +49,8 @@ repo[21]="git@gitee.com:meimolihan/metube.git"
 comment[21]="视频下载"
 repo[22]="git@gitee.com:meimolihan/taoSync.git"
 comment[22]="云盘同步"
-
+repo[23]="git@gitee.com:meimolihan/speedtest.git"
+comment[23]="内网测速"
 
 menu() {
     clear
