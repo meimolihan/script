@@ -94,3 +94,27 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/certbot-mobufan.eu.org.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/certbot-mobufan.eu.org.sh)
 ```
+
+## rename_webp_pc.sh
+
+- 这个脚本的作用是将当前目录下的所有 `.webp` 文件按照修改时间排序，然后使用用户指定的前缀（默认为 `pc`）和三位数字序号（如 `pc-001.webp`）对它们进行重命名，同时避免覆盖已存在的文件，并在操作完成后显示处理的文件数量。
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/linux/rename_webp_pc.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/rename_webp_pc.sh)
+```
+
+## rename_webp_phone.sh
+
+- 这个脚本的作用是将当前目录下的所有 `.webp` 文件按照修改时间排序，然后使用用户指定的前缀（默认为 `phone`）和三位数字序号（如 `phone-001.webp`）对它们进行重命名，同时避免覆盖已存在的文件，并在操作完成后显示处理的文件数量。
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/linux/rename_webp_phone.sh)
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/rename_webp_phone.sh)
+```

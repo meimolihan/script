@@ -1,35 +1,71 @@
 #!/bin/bash
 
-# 提示输入前缀，默认值为'phone'
-read -p "请输入文件名前缀（直接回车使用默认'phone'）: " prefix
-prefix=${prefix:-phone}  # 如果用户直接回车，则使用默认值'phone'
+# 配置区
 
-# 获取所有.webp文件并按修改时间排序
-files=()
-while IFS= read -r -d $'\0' file; do
-    files+=("$file")
-done < <(find . -maxdepth 1 -name "*.webp" -print0 | sort -z)
+default_prefix="phone"
 
-# 检查是否有.webp文件
-if [ ${#files[@]} -eq 0 ]; then
-    echo "未找到.webp文件！"
-    exit 1
+# 用户输入交互
+
+read -p "请输入文件名前缀（默认 $default_prefix）：" prefix
+
+if [ -z "$prefix" ]; then
+
+    prefix="$default_prefix"
+
 fi
 
-# 开始重命名操作
-count=1
-for file in "${files[@]}"; do
-    # 生成新文件名（如phone-001.webp）
-    new_name=$(printf "%s-%03d.webp" "$prefix" "$count")
-    
-    # 避免覆盖已存在的文件
-    if [ -e "$new_name" ]; then
-        echo "错误：文件 '$new_name' 已存在，跳过重命名 '$file'"
-    else
-        mv -n -- "$file" "$new_name" && echo "已重命名: $file -> $new_name"
-    fi
-    
-    ((count++))
+echo "正在使用前缀：[$prefix]"
+
+# 设置起始编号为1
+
+counter=1
+
+temp_folder="temp_rename_folder_$RANDOM"
+
+# 创建临时文件夹
+
+mkdir -p "$temp_folder"
+
+# 安全移动文件到临时文件夹（处理文件名中的空格和特殊字符）
+
+find . -maxdepth 1 -name '*.webp' -print0 | while IFS= read -r -d $'\0' file; do
+
+    mv -v "$file" "$temp_folder/"
+
 done
 
-echo "操作完成！共处理 $((count-1)) 个文件。"
+# 按修改时间排序并重命名文件
+
+find "$temp_folder" -name '*.webp' -print0 | while IFS= read -r -d $'\0' old_path; do
+
+    file=$(basename "$old_path")
+
+    
+
+    # 生成新文件名（三位数编号自动补零）
+
+    new_file=$(printf "%s-%03d.webp" "$prefix" "$counter")
+
+    
+
+    # 执行重命名并移动
+
+    echo "正在重命名并移动：\"$temp_folder/$file\" → $new_file"
+
+    mv -v "$temp_folder/$file" "$new_file"
+
+    
+
+    ((counter++))
+
+done
+
+# 删除临时文件夹
+
+rm -rf "$temp_folder"
+
+# 执行结果报告
+
+echo "---------------------------"
+
+echo "所有文件已处理完成！共重命名 $((counter-1)) 个文件"
