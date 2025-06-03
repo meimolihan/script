@@ -7,16 +7,20 @@ YELLOW='\033[33m'
 BLUE='\033[34m'
 RESET='\033[0m'
 
+# 提取并打印仓库目录名（路径的最后一部分）
+repo_dir=$(basename "$(pwd)")
+
 echo -e "${BLUE}==================================${RESET}"
 echo -e "${BLUE}GitHub 新仓库初始化脚本${RESET}"
 echo -e "${BLUE}==================================${RESET}"
-
 echo -e "${YELLOW}注意事项："
 echo -e "1. 请确保已在 GitHub 创建同名空仓库"
-echo -e "2. 需要提前配置好 GitHub 访问权限${RESET}"
-
+echo -e "2. 请确保已在 GitHub 创建名为 ${repo_dir} 仓库"
+echo -e "3. 需要提前配置好 GitHub 访问权限${RESET}"
 echo -e "${BLUE}==================================${RESET}"
 echo -e "当前操作目录: $(pwd)"
+echo -e "${BLUE}==================================${RESET}"
+echo -e "仓库目录: ${repo_dir}"
 echo -e "${BLUE}==================================${RESET}"
 
 # 检查 git 命令是否存在
