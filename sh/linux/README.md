@@ -118,3 +118,39 @@ bash <(curl -sL script.meimolihan.eu.org/sh/linux/rename_webp_phone.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/rename_webp_phone.sh)
 ```
+
+## rename_webp-png-jpg_phone.sh
+
+- 这个脚本的作用是：**将当前目录下的所有图片文件（`PNG、JPG、WEBP 等`）按修改时间排序，并批量重命名为用户指定的前缀+三位数字序号格式（如 phone-001.jpg）**。
+
+```bash
+cd /vol2/1000/壁纸原图/手机原图 && \
+ls -t | head -n 6 && \
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/rename_webp-png-jpg_phone.sh)
+```
+
+## rename_webp-png-jpg_pc.sh
+
+- 这个脚本的作用是：**将当前目录下的所有图片文件（`PNG、JPG、WEBP 等`）按修改时间排序，并批量重命名为用户指定的前缀+三位数字序号格式（如 pc-001.jpg）**。
+
+```bash
+cd /vol2/1000/壁纸原图/电脑原图 && \
+ls -t | head -n 6 && \
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/rename_webp-png-jpg_pc.sh)
+```
+
+## wallpaper_phone_dirs.sh
+
+- 这个脚本用于比较两个指定目录（**`已处理手机壁纸目录`**和**`手机壁纸原图目录`**）的文件数量和总大小，输出详细的对比数据和比率分析，帮助用户了解图片处理前后的变化情况。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_phone_dirs.sh)
+```
+
+## wallpaper_pc_dirs.sh
+
+- 这个脚本用于比较两个指定目录（**`已处理电脑壁纸目录`**和**`电脑壁纸原图目录`**）的文件数量和总大小，输出详细的对比数据和比率分析，帮助用户了解图片处理前后的变化情况。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_pc_dirs.sh)
+```

@@ -15,9 +15,9 @@ check_command bc
 directories=(
     "未处理壁纸目录|/vol1/1000/home/random-pic-api/photos"
     "已处理手机壁纸目录|/vol1/1000/home/random-pic-api/portrait"
-    "手机壁纸原图目录|/vol2/1000/壁纸原图/手机原图"
+    "手机壁纸原图目录|/vol2/1000/阿里云盘/教程文件/壁纸原图/手机原图"
     "已处理电脑壁纸目录|/vol1/1000/home/random-pic-api/landscape"
-    "电脑壁纸原图目录|/vol2/1000/壁纸原图/电脑原图"
+    "电脑壁纸原图目录|/vol2/1000/阿里云盘/教程文件/壁纸原图/电脑原图"
 )
 
 for item in "${directories[@]}"; do
