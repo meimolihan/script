@@ -11,7 +11,6 @@ wsl
 ### 2 、添加排除 `.git` 命令（`PowerShell` 或 `Git Bash` 命令）
 
 ```bash
-wsl && \
 rsync -avhz --progress --delete-delay \
   --exclude='**/.git/' \
   /mnt/c/Users/Administrator/Desktop/Gitee/script/ \
