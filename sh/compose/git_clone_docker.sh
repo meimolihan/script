@@ -53,7 +53,8 @@ repo[23]="git@gitee.com:meimolihan/speedtest.git"
 comment[23]="内网测速"
 repo[24]="git@gitee.com:meimolihan/watchtower.git"
 comment[24]="容器自动更新"
-
+repo[25]="git@gitee.com:meimolihan/reubah.git"
+comment[25]="图片文档格式转换"
 
 menu() {
     clear
