@@ -55,6 +55,9 @@ repo[24]="git@gitee.com:meimolihan/watchtower.git"
 comment[24]="容器自动更新"
 repo[25]="git@gitee.com:meimolihan/reubah.git"
 comment[25]="图片文档格式转换"
+repo[26]="git@gitee.com:meimolihan/navidrome.git"
+comment[26]="网页音乐播放器"
+
 
 menu() {
     clear
