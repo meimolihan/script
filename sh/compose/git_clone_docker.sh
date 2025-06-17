@@ -57,7 +57,8 @@ repo[25]="git@gitee.com:meimolihan/reubah.git"
 comment[25]="图片文档格式转换"
 repo[26]="git@gitee.com:meimolihan/navidrome.git"
 comment[26]="网页音乐播放器"
-
+repo[27]="git@gitee.com:meimolihan/openlist.git"
+comment[27]="网盘挂载"
 
 menu() {
     clear
