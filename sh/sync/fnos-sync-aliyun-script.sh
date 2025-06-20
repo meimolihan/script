@@ -39,7 +39,7 @@ case "$choice" in
     print_separator
     
     # 连接到FnOS服务器并执行rsync命令
-    ssh fnos "rsync -avhz --progress --delete-delay /vol2/1000/阿里云盘/ /vol1/1000/smb_win11/"
+    ssh fnos "rsync -avhz --progress --delete-delay /vol2/1000/阿里云盘/ /vol2/1000/smb_win11-D/"
     
     # 检查命令执行结果
     print_separator
