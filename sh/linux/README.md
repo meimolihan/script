@@ -154,3 +154,19 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_phone_
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_pc_dirs.sh)
 ```
+
+## wallpaper_phone_all.sh
+
+- 该脚本按顺序执行`整理手机壁纸`、备份手机壁纸原图、对手机壁纸和原图排序以及比较指定目录等操作，实现手机壁纸的自动化处理与管理。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_phone_all.sh)
+```
+
+## wallpaper_pc_all.sh
+
+- 该脚本按顺序执行`整理电脑壁纸`、备份电脑壁纸原图、对电脑壁纸和原图排序以及比较指定目录等操作，实现电脑壁纸的自动化处理与管理。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_pc_all.sh)
+```
