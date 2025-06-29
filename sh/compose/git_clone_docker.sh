@@ -59,6 +59,9 @@ repo[26]="git@gitee.com:meimolihan/navidrome.git"
 comment[26]="网页音乐播放器"
 repo[27]="git@gitee.com:meimolihan/openlist.git"
 comment[27]="网盘挂载"
+repo[28]="git@gitee.com:meimolihan/musicn.git"
+comment[28]="音乐下载"
+
 
 menu() {
     clear
