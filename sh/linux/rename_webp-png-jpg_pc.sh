@@ -37,7 +37,6 @@ find "$temp_folder" -type f -exec ls -tr {} + | while read -r old_path; do
     # 执行重命名并移动
     echo "正在重命名并移动：\"$old_path\" → $new_file"
     mv -v -- "$old_path" "$new_file"
-    
     ((counter++))
 done
 
@@ -46,4 +45,4 @@ rm -rf "$temp_folder"
 
 # 执行结果报告
 echo "---------------------------"
-echo "所有文件已处理完成！"
+echo "电脑原图壁纸排序完成！"
