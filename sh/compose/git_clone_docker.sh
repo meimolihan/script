@@ -61,6 +61,10 @@ repo[27]="git@gitee.com:meimolihan/openlist.git"
 comment[27]="网盘挂载"
 repo[28]="git@gitee.com:meimolihan/musicn.git"
 comment[28]="音乐下载"
+repo[29]="git@gitee.com:meimolihan/nginx-file-server.git"
+comment[29]="nginx 文件服务"
+repo[30]="git@gitee.com:meimolihan/moontv.git"
+comment[30]="影视聚合播放器"
 
 
 menu() {
