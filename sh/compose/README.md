@@ -71,3 +71,12 @@ bash <(curl -sL script.meimolihan.eu.org/sh/compose/docker_load_all_images.sh)
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/docker_load_all_images.sh)
 ```
+
+### docker-compose-down-all.sh
+
+- 用于批量停止（当前目录） Docker 服务的脚本，通过配置列表管理多个服务，支持选择性启用 / 禁用，并提供详细的日志输出和错误处理。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/compose/docker-compose-down-all.sh)
+```
+

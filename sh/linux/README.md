@@ -170,3 +170,12 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_phone_
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_pc_all.sh)
 ```
+
+### install_ccat.sh
+
+- 自动化安装并配置 `ccat` 工具，使其替代系统默认的 `cat` 命令，从而实现文件查看时的语法高亮显示，并支持生成带语法高亮的 HTML 格式文档。
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/install_ccat.sh)
+```
+

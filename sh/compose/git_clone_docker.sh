@@ -65,6 +65,8 @@ repo[29]="git@gitee.com:meimolihan/nginx-file-server.git"
 comment[29]="nginx 文件服务"
 repo[30]="git@gitee.com:meimolihan/moontv.git"
 comment[30]="影视聚合播放器"
+repo[31]="git@gitee.com:meimolihan/hexo.git"
+comment[31]="Hexo 博客"
 
 
 menu() {
