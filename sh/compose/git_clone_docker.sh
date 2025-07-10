@@ -67,7 +67,10 @@ repo[30]="git@gitee.com:meimolihan/moontv.git"
 comment[30]="影视聚合播放器"
 repo[31]="git@gitee.com:meimolihan/hexo.git"
 comment[31]="Hexo 博客"
-
+repo[32]="git@gitee.com:meimolihan/gitea.git"
+comment[32]="代码托管平台"
+repo[33]="git@gitee.com:meimolihan/cloud-saver.git"
+comment[33]="网盘影视搜索"
 
 menu() {
     clear
