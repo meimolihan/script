@@ -11,7 +11,7 @@ check_command awk
 check_command bc
 
 # 定义要比较的两个目录
-dir1="/vol1/1000/home/random-pic-api/landscape"
+dir1="/vol1/1000/compose/random-pic-api/landscape"
 dir2="/vol2/1000/阿里云盘/教程文件/壁纸原图/电脑原图"
 
 # 定义目录友好名称

@@ -71,6 +71,8 @@ repo[32]="git@gitee.com:meimolihan/gitea.git"
 comment[32]="代码托管平台"
 repo[33]="git@gitee.com:meimolihan/cloud-saver.git"
 comment[33]="网盘影视搜索"
+repo[34]="git@gitee.com:meimolihan/sun-panel-helper.git"
+comment[34]="sun-panel 美化工具"
 
 menu() {
     clear

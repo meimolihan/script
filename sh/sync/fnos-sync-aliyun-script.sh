@@ -26,7 +26,7 @@ print_separator
 echo -e "${GREEN}===== FnOS服务器数据同步工具 ====${NC}"
 print_separator
 echo -e "${YELLOW}此脚本将登录FnOS服务器并执行以下同步命令：${NC}"
-echo -e "${YELLOW}rsync -avhzp --progress --delete /vol2/1000/阿里云盘/ /vol2/1000/smb_win11-D/${NC}"
+echo -e "${YELLOW}rsync -avhzp --progress --delete /vol2/1000/阿里云盘/ /vol2/1000/samba/win11-D/${NC}"
 echo -e "${RED}警告：此命令会删除目标目录中源目录不存在的文件！${NC}"
 print_separator
 
@@ -39,7 +39,7 @@ case "$choice" in
     print_separator
     
     # 连接到FnOS服务器并执行rsync命令
-    ssh fnos "rsync -avhz --progress --delete-delay /vol2/1000/阿里云盘/ /vol2/1000/smb_win11-D/"
+    ssh fnos "rsync -avhz --progress --delete-delay /vol2/1000/阿里云盘/ /vol2/1000/samba/win11-D/"
     
     # 检查命令执行结果
     print_separator

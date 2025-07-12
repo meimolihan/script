@@ -4,7 +4,7 @@ clear  # 清屏命令
 # 随机壁纸处理脚本 - 手机壁纸
 # 一、整理壁纸
 echo "===== 开始整理手机壁纸 ====="
-cd /vol1/1000/home/random-pic-api && \
+cd /vol1/1000/compose/random-pic-api && \
 python3 classify.py
 echo "壁纸整理完成"
 sleep 2  # 暂停2秒
@@ -12,7 +12,7 @@ sleep 2  # 暂停2秒
 # 二、备份手机壁纸原图
 clear  # 清屏命令
 echo "===== 开始备份手机壁纸原图 ====="
-mv -i /vol1/1000/home/random-pic-api/photos/* /vol2/1000/阿里云盘/教程文件/壁纸原图/手机原图/
+mv -i /vol1/1000/compose/random-pic-api/photos/* /vol2/1000/阿里云盘/教程文件/壁纸原图/手机原图/
 echo "原图备份完成"
 sleep 2  # 暂停2秒
 
@@ -31,7 +31,7 @@ esac
 # 四、已完成手机壁纸排序
 clear  # 清屏命令
 echo "===== 开始手机壁纸排序 ====="
-cd /vol1/1000/home/random-pic-api/portrait && \
+cd /vol1/1000/compose/random-pic-api/portrait && \
 ls -t | head -n 6 && \
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/rename_webp_phone.sh)
 sleep 2  # 暂停2秒
