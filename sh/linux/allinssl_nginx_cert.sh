@@ -4,9 +4,9 @@
 # 当证书剩余有效期少于18天时，自动更新证书并重启Nginx
 
 # 定义源文件和目标文件路径
-CERT_SOURCE="/mnt/mydisk/home/allinssl/data/mobufan.eu.org.pem"
+CERT_SOURCE="/mnt/compose/allinssl/data/mobufan.eu.org.pem"
 CERT_TARGET="/etc/nginx/keyfile/cert.pem"
-KEY_SOURCE="/mnt/mydisk/home/allinssl/data/mobufan.eu.org.key"
+KEY_SOURCE="/mnt/compose/allinssl/data/mobufan.eu.org.key"
 KEY_TARGET="/etc/nginx/keyfile/key.pem"
 
 # 定义日志函数
@@ -42,7 +42,7 @@ else
         log "  剩余天数: $DAYS_LEFT 天"
         echo =================================================
         # 判断是否需要更新
-        if [ $DAYS_LEFT -le 18 ]; then
+        if [ $DAYS_LEFT -le 30 ]; then
             log "⚠️ 警告: 证书即将过期(剩余$DAYS_LEFT天)，需要更新"
             UPDATE_REQUIRED=true
         else
