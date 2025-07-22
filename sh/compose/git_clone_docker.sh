@@ -73,6 +73,8 @@ repo[33]="git@gitee.com:meimolihan/cloud-saver.git"
 comment[33]="网盘影视搜索"
 repo[34]="git@gitee.com:meimolihan/sun-panel-helper.git"
 comment[34]="sun-panel 美化工具"
+repo[35]="git@gitee.com:meimolihan/dufs.git"
+comment[35]="Dufs 文件服务"
 
 menu() {
     clear
