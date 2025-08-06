@@ -75,6 +75,13 @@ repo[34]="git@gitee.com:meimolihan/sun-panel-helper.git"
 comment[34]="sun-panel 美化工具"
 repo[35]="git@gitee.com:meimolihan/dufs.git"
 comment[35]="Dufs 文件服务"
+repo[36]="git@gitee.com:meimolihan/mind-map.git"
+comment[36]="mind-map 思维导图"
+repo[37]="git@gitee.com:meimolihan/qbittorrent.git"
+comment[37]="qbittorrent 下载器"
+repo[38]="git@gitee.com:meimolihan/transmission.git"
+comment[38]="transmission 下载器"
+
 
 menu() {
     clear
