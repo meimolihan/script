@@ -109,6 +109,10 @@ repo[36]="git@gitee.com:meimolihan/reubah.git"
 comment[36]="格式转换"
 repo[37]="git@gitee.com:meimolihan/gitea.git"
 comment[37]="代码托管"
+repo[38]="git@gitee.com:meimolihan/webtop-ubuntu.git"
+comment[38]="ubuntu 桌面"
+repo[39]="git@gitee.com:meimolihan/webtop-alpine.git"
+comment[39]="alpine 桌面"
 
 # 克隆单个仓库
 clone_repo() {
@@ -240,7 +244,7 @@ menu() {
     
     # 其他工具
     echo -e "\n${GREEN}--- 其他工具 ---${NC}"
-    for index in 34 35 36 37; do
+    for index in 34 35 36 37 38 39; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
