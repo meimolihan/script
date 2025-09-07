@@ -31,88 +31,94 @@ repo[4]="git@gitee.com:meimolihan/hexo.git"
 comment[4]="博客系统"
 repo[5]="git@gitee.com:meimolihan/md.git"
 comment[5]="云文档"
+repo[6]="git@gitee.com:meimolihan/nginx-dock-builder.git"
+comment[6]="配置编辑"
+repo[7]="git@gitee.com:meimolihan/mindoc.git"
+comment[7]="文档管理系统"
 
 # 影视相关
-repo[6]="git@gitee.com:meimolihan/aipan.git"
-comment[6]="爱盼影视"
-repo[7]="git@gitee.com:meimolihan/libretv.git"
-comment[7]="影视聚合"
-repo[8]="git@gitee.com:meimolihan/moontv.git"
-comment[8]="影视聚合"
-repo[9]="git@gitee.com:meimolihan/nastools.git"
-comment[9]="影视刮削"
-repo[10]="git@gitee.com:meimolihan/emby.git"
-comment[10]="媒体服务器"
-repo[11]="git@gitee.com:meimolihan/tvhelper.git"
-comment[11]="电视助手"
+repo[8]="git@gitee.com:meimolihan/aipan.git"
+comment[8]="爱盼影视"
+repo[9]="git@gitee.com:meimolihan/libretv.git"
+comment[9]="影视聚合"
+repo[10]="git@gitee.com:meimolihan/moontv.git"
+comment[10]="影视聚合"
+repo[11]="git@gitee.com:meimolihan/nastools.git"
+comment[11]="影视刮削"
+repo[12]="git@gitee.com:meimolihan/emby.git"
+comment[12]="媒体服务器"
+repo[13]="git@gitee.com:meimolihan/tvhelper.git"
+comment[13]="电视助手"
 
 # 音乐相关
-repo[12]="git@gitee.com:meimolihan/musicn.git"
-comment[12]="音乐下载"
-repo[13]="git@gitee.com:meimolihan/navidrome.git"
-comment[13]="音乐播放器"
-repo[14]="git@gitee.com:meimolihan/xiaomusic.git"
-comment[14]="小米音乐"
+repo[14]="git@gitee.com:meimolihan/musicn.git"
+comment[14]="音乐下载"
+repo[15]="git@gitee.com:meimolihan/navidrome.git"
+comment[15]="音乐播放器"
+repo[16]="git@gitee.com:meimolihan/xiaomusic.git"
+comment[16]="小米音乐"
 
 # 下载工具
-repo[15]="git@gitee.com:meimolihan/xunlei.git"
-comment[15]="下载器"
-repo[16]="git@gitee.com:meimolihan/qbittorrent.git"
-comment[16]="下载器"
-repo[17]="git@gitee.com:meimolihan/transmission.git"
+repo[17]="git@gitee.com:meimolihan/xunlei.git"
 comment[17]="下载器"
-repo[18]="git@gitee.com:meimolihan/metube.git"
-comment[18]="视频下载"
+repo[18]="git@gitee.com:meimolihan/qbittorrent.git"
+comment[18]="下载器"
+repo[19]="git@gitee.com:meimolihan/transmission.git"
+comment[19]="下载器"
+repo[20]="git@gitee.com:meimolihan/metube.git"
+comment[20]="视频下载"
 
 # 网盘与文件管理
-repo[19]="git@gitee.com:meimolihan/cloud-saver.git"
-comment[19]="网盘搜索"
-repo[20]="git@gitee.com:meimolihan/pansou.git"
-comment[20]="网盘搜索"
-repo[21]="git@gitee.com:meimolihan/openlist.git"
-comment[21]="网盘挂载"
-repo[22]="git@gitee.com:meimolihan/nginx-file-server.git"
-comment[22]="文件服务"
-repo[23]="git@gitee.com:meimolihan/dufs.git"
-comment[23]="文件服务"
-repo[24]="git@gitee.com:meimolihan/taosync.git"
-comment[24]="云盘同步"
+repo[21]="git@gitee.com:meimolihan/cloud-saver.git"
+comment[21]="网盘搜索"
+repo[22]="git@gitee.com:meimolihan/pansou.git"
+comment[22]="网盘搜索"
+repo[23]="git@gitee.com:meimolihan/openlist.git"
+comment[23]="网盘挂载"
+repo[24]="git@gitee.com:meimolihan/nginx-file.git"
+comment[24]="文件服务"
+repo[25]="git@gitee.com:meimolihan/dufs.git"
+comment[25]="文件服务"
+repo[26]="git@gitee.com:meimolihan/taosync.git"
+comment[26]="云盘同步"
 
 # 导航与工具
-repo[25]="git@gitee.com:meimolihan/sun-panel.git"
-comment[25]="导航面板"
-repo[26]="git@gitee.com:meimolihan/sun-panel-helper.git"
-comment[26]="导航面板"
-repo[27]="git@gitee.com:meimolihan/it-tools.git"
-comment[27]="IT 工具箱"
-repo[28]="git@gitee.com:meimolihan/random-pic-api.git"
-comment[28]="随机图片"
-repo[29]="git@gitee.com:meimolihan/mind-map.git"
-comment[29]="思维导图"
+repo[27]="git@gitee.com:meimolihan/sun-panel.git"
+comment[27]="导航面板"
+repo[28]="git@gitee.com:meimolihan/sun-panel-helper.git"
+comment[28]="导航面板"
+repo[29]="git@gitee.com:meimolihan/it-tools.git"
+comment[29]="IT 工具箱"
+repo[30]="git@gitee.com:meimolihan/random-pic-api.git"
+comment[30]="随机图片"
+repo[31]="git@gitee.com:meimolihan/mind-map.git"
+comment[31]="思维导图"
 
 # 网络相关
-repo[30]="git@gitee.com:meimolihan/istoreos.git"
-comment[30]="路由器系统"
-repo[31]="git@gitee.com:meimolihan/kspeeder.git"
-comment[31]="网络加速器"
-repo[32]="git@gitee.com:meimolihan/uptime-kuma.git"
-comment[32]="网站监控"
-repo[33]="git@gitee.com:meimolihan/speedtest.git"
-comment[33]="内网测速"
+repo[32]="git@gitee.com:meimolihan/istoreos.git"
+comment[32]="路由器系统"
+repo[33]="git@gitee.com:meimolihan/kspeeder.git"
+comment[33]="网络加速器"
+repo[34]="git@gitee.com:meimolihan/uptime-kuma.git"
+comment[34]="网站监控"
+repo[35]="git@gitee.com:meimolihan/speedtest.git"
+comment[35]="内网测速"
 
 # 其他工具
-repo[34]="git@gitee.com:meimolihan/easyvoice.git"
-comment[34]="语音转文字"
-repo[35]="git@gitee.com:meimolihan/watchtower.git"
-comment[35]="容器更新"
-repo[36]="git@gitee.com:meimolihan/reubah.git"
-comment[36]="格式转换"
-repo[37]="git@gitee.com:meimolihan/gitea.git"
-comment[37]="代码托管"
-repo[38]="git@gitee.com:meimolihan/webtop-ubuntu.git"
-comment[38]="ubuntu 桌面"
-repo[39]="git@gitee.com:meimolihan/webtop-alpine.git"
-comment[39]="alpine 桌面"
+repo[36]="git@gitee.com:meimolihan/easyvoice.git"
+comment[36]="语音转文字"
+repo[37]="git@gitee.com:meimolihan/watchtower.git"
+comment[37]="容器更新"
+repo[38]="git@gitee.com:meimolihan/reubah.git"
+comment[38]="格式转换"
+repo[39]="git@gitee.com:meimolihan/gitea.git"
+comment[39]="代码托管"
+repo[40]="git@gitee.com:meimolihan/webtop-ubuntu.git"
+comment[40]="ubuntu 桌面"
+repo[41]="git@gitee.com:meimolihan/webtop-alpine.git"
+comment[41]="alpine 桌面"
+repo[42]="git@gitee.com:meimolihan/easynode.git"
+comment[42]="WebSSH 工具"
 
 # 克隆单个仓库
 clone_repo() {
@@ -167,7 +173,7 @@ menu() {
     
     # 博客与文档系统
     echo -e "\n${GREEN}--- 博客与文档系统 ---${NC}"
-    for index in 3 4 5; do
+    for index in 3 4 5 6 7; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -178,7 +184,7 @@ menu() {
     
     # 影视相关
     echo -e "\n${GREEN}--- 影视相关 ---${NC}"
-    for index in 6 7 8 9 10 11; do
+    for index in 8 9 10 11 12 13; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -189,7 +195,7 @@ menu() {
     
     # 音乐相关
     echo -e "\n${GREEN}--- 音乐相关 ---${NC}"
-    for index in 12 13 14; do
+    for index in 14 15 16; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -200,7 +206,7 @@ menu() {
     
     # 下载工具
     echo -e "\n${GREEN}--- 下载工具 ---${NC}"
-    for index in 15 16 17 18; do
+    for index in 17 18 19 20; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -211,7 +217,7 @@ menu() {
     
     # 网盘与文件管理
     echo -e "\n${GREEN}--- 网盘与文件管理 ---${NC}"
-    for index in 19 20 21 22 23 24; do
+    for index in 21 22 23 24 25 26; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -222,7 +228,7 @@ menu() {
     
     # 导航与工具
     echo -e "\n${GREEN}--- 导航与工具 ---${NC}"
-    for index in 25 26 27 28 29; do
+    for index in 27 28 29 30 31; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -233,7 +239,7 @@ menu() {
     
     # 网络相关
     echo -e "\n${GREEN}--- 网络相关 ---${NC}"
-    for index in 30 31 32 33; do
+    for index in 32 33 34 35; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
@@ -244,7 +250,7 @@ menu() {
     
     # 其他工具
     echo -e "\n${GREEN}--- 其他工具 ---${NC}"
-    for index in 34 35 36 37 38 39; do
+    for index in 36 37 38 39 40 41 42; do
         if [ -n "${repo[$index]}" ]; then
             printf "${GREEN}%2d. %-20s -- %s${NC}\n" \
                 "$index" \
