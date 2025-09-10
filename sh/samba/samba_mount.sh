@@ -28,7 +28,7 @@ if ! command -v mount.cifs &> /dev/null || ! command -v smbclient &> /dev/null; 
 fi
 
 # 提示输入服务器IP
-read -e -p "请输入Samba服务器IP地址: " server_ip
+read -e -p "请输入Samba 服务器 IP 地址: " server_ip
 
 # 测试网络连通性
 echo "测试网络连通性..."
