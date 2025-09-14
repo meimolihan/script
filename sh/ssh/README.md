@@ -41,10 +41,10 @@ Samba 是在 Linux 和 UNIX 系统上实现 SMB/CIFS 协议的开源软件，允
 **使用方法：**
 ```bash
 # Vercel 仓库
-bash <(curl -sL script.meimolihan.eu.org/sh/samba/samba_setup.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/ssh/setup-ssh.sh)
 
 # Gitee 仓库
-bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/samba/samba_setup.sh)
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/ssh/setup-ssh.sh)
 ```
 
 ![](https://file.meimolihan.eu.org/screenshot/samba-setup-001.webp) 

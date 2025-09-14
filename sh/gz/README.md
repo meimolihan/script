@@ -2,17 +2,15 @@
 
 ### 压缩为`.gz`文件
 
-- 遍历当前目录下的子目录压缩为`.tar.gz`文件
+- 遍历当前目录下的 `子目录` 压缩为`.tar.gz`文件
 
 ```bash
-bash <(curl -sL script.meimolihan.eu.org/sh/gz/backup-gz.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/gz/backup_gz.sh)
 ```
 
 ```bash
-bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/gz/backup-gz.sh)
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/gz/backup_gz.sh)
 ```
-
-## 
 
 ### 解压 `.tar.gz` 文件
 
