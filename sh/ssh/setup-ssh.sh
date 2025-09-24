@@ -1,9 +1,13 @@
 #!/bin/bash
-
 # ==============================================
 # 通用 Linux SSH 服务配置脚本
-# 支持 Debian, Ubuntu, CentOS, RHEL, Fedora, 
+# 支持 Debian, Ubuntu, CentOS, RHEL, Fedora,
 # Proxmox VE, FnOS, OpenSUSE, Arch Linux 等主流发行版
+# ==============================================
+# 版本: v2.0
+# 更新日期: 2025-09-24
+# 作者: YourName
+# 仓库: https://github.com/yourrepo/ssh-setup
 # ==============================================
 
 set -e
@@ -149,32 +153,44 @@ configure_ssh() {
     fi
     
     # 使用 sed 命令修改 SSH 配置
-    sed -i.bak \
-        -e 's/^#Port 22/Port 22/' \
-        -e 's/^#PermitRootLogin.*/PermitRootLogin yes/' \
-        -e 's/^#GSSAPIAuthentication.*/GSSAPIAuthentication no/' \
-        -e 's/^#UseDNS.*/UseDNS no/' \
-        -e 's/^#Compression.*/Compression yes/' \
-        -e 's/^#TCPKeepAlive.*/TCPKeepAlive yes/' \
-        -e 's/^#ClientAliveInterval.*/ClientAliveInterval 10/' \
-        -e 's/^#ClientAliveCountMax.*/ClientAliveCountMax 999/' \
-        /etc/ssh/sshd_config
-    
-    # 确保必要的配置项存在
-    grep -q "^Port 22" /etc/ssh/sshd_config || echo "Port 22" >> /etc/ssh/sshd_config
-    grep -q "^PermitRootLogin yes" /etc/ssh/sshd_config || echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-    grep -q "^GSSAPIAuthentication no" /etc/ssh/sshd_config || echo "GSSAPIAuthentication no" >> /etc/ssh/sshd_config
-    grep -q "^UseDNS no" /etc/ssh/sshd_config || echo "UseDNS no" >> /etc/ssh/sshd_config
-    grep -q "^Compression yes" /etc/ssh/sshd_config || echo "Compression yes" >> /etc/ssh/sshd_config
-    grep -q "^TCPKeepAlive yes" /etc/ssh/sshd_config || echo "TCPKeepAlive yes" >> /etc/ssh/sshd_config
-    grep -q "^ClientAliveInterval 10" /etc/ssh/sshd_config || echo "ClientAliveInterval 10" >> /etc/ssh/sshd_config
-    grep -q "^ClientAliveCountMax 999" /etc/ssh/sshd_config || echo "ClientAliveCountMax 999" >> /etc/ssh/sshd_config
+sed -i.bak \
+    -e '\|^# the setting of "PermitRootLogin prohibit-password"\.$|d' \
+    -e 's/^#*Port .*/Port 22/' \
+    -e 's/^#*PermitRootLogin .*/PermitRootLogin yes/' \
+    -e 's/^#*GSSAPIAuthentication .*/GSSAPIAuthentication no/' \
+    -e 's/^#*UseDNS .*/UseDNS no/' \
+    -e 's/^#*Compression .*/Compression yes/' \
+    -e 's/^#*ClientAliveInterval .*/ClientAliveInterval 30/' \
+    -e 's/^#*ClientAliveCountMax .*/ClientAliveCountMax 86400/' \
+    -e 's/^#*TCPKeepAlive.*/TCPKeepAlive no/' \
+    /etc/ssh/sshd_config
     
     log_info "SSH 配置完成"
+    echo -e "${CYAN}=============================================="
+    echo -e "           SSH 配置文件修改详情"
+    echo -e "=============================================="
+    echo -e "${NC}"
+    grep -E 'Port 22|PermitRootLogin|GSSAPIAuthentication|UseDNS|Compression|ClientAliveInterval|ClientAliveCountMax|TCPKeepAlive' /etc/ssh/sshd_config
+    echo -e ""
+    echo -e "${CYAN}=============================================="
+    echo -e "           SSH 服务配置说明"
+    echo -e "=============================================="
+    echo -e "${NC}"
+    echo -e "Port 22 ：${BLUE}强制监听 22 端口。${NC}"
+    echo -e "PermitRootLogin yes ：${BLUE}允许 root 直接密码/密钥登录。${NC}"
+    echo -e "GSSAPIAuthentication no ：${BLUE}关闭 GSSAPI，加快连接速度。${NC}"
+    echo -e "TCPKeepAlive no ：${BLUE}仅用 SSH 层心跳，避免伪造 RST 导致误断。${NC}"
+    echo -e "Compression yes ：${BLUE}开启 SSH 层压缩，节省带宽。${NC}"
+    echo -e "ClientAliveInterval 30 ：${BLUE}每 30 秒服务端发一次心跳。${NC}"
+    echo -e "ClientAliveCountMax 86400 ：${BLUE}连续 86400 次无响应才断开≈30 天。${NC}"
+    echo -e "UseDNS no ：${BLUE}禁用反向 DNS，防止登录卡慢。${NC}"
+    echo -e ""
+    echo -e "${CYAN}=============================================="
 }
 
 # 配置防火墙
 configure_firewall() {
+    echo -e ""
     log_info "开始配置防火墙..."
     
     # 检测防火墙工具
@@ -234,7 +250,7 @@ start_ssh_service() {
 show_connection_info() {
     local ip_address=$(hostname -I | awk '{print $1}')
     echo ""
-    echo -e "${CYAN}=============================================="
+    echo -e "=============================================="
     echo -e "           SSH 服务配置完成!"
     echo -e "=============================================="
     echo -e "${NC}"

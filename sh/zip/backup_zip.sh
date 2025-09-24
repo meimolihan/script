@@ -173,7 +173,7 @@ echo "开始备份 '$source_dir' 下的所有子目录..."
 echo
 
 # 获取当前日期
-current_date=$(date +'%Y-%m-%d')
+current_date=$(date +'%Y%m%d_%H%M%S')
 backup_count=0
 error_count=0
 

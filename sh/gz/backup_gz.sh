@@ -14,7 +14,7 @@ stty erase ^H 2>/dev/null || stty erase ^? 2>/dev/null
 
 clear
 echo "=================================="
-echo "         GZ 备份工具 v2.0"
+echo "         GZ 备份工具交互式 v2.0"
 echo "=================================="
 echo "功能描述："
 echo "  1. 备份指定源目录下的所有子目录到备份目录"
@@ -153,7 +153,7 @@ echo "开始备份 '$source_dir' 下的所有子目录..."
 echo
 
 # 获取当前日期
-current_date=$(date +'%Y-%m-%d')
+current_date=$(date +'%Y%m%d_%H%M%S')
 backup_count=0
 error_count=0
 

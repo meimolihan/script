@@ -1,4 +1,4 @@
-# Linux 文件压缩与解压工具脚本集 📦
+# Linux 文件压缩与解压脚本 & 交互式📦
 
 ![](https://file.meimolihan.eu.org/img/zip-gz-01.webp) 
 
@@ -36,13 +36,13 @@
 
 **📝 使用命令：**
 ```bash
-bash <(curl -sL script.meimolihan.eu.org/sh/zip/backup-zip.sh)
+bash <(curl -sL script.meimolihan.eu.org/sh/zip/backup_zip.sh)
 ```
 
 - 或使用国内镜像（若访问 GitHub 受限）：
 
 ```bash
-bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/backup-zip.sh)
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/zip/backup_zip.sh)
 ```
 
 ![backup-zip压缩示例](https://file.meimolihan.eu.org/screenshot/backup-zip-001.webp) 
