@@ -179,3 +179,11 @@ bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/wallpaper_pc_all
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/install_ccat.sh)
 ```
 
+## clean_system.sh
+
+- 系统清理脚本
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/linux/clean_system.sh)
+```
+
