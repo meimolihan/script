@@ -1,12 +1,11 @@
 #!/bin/bash
-
 # 设置错误处理，遇到错误立即退出
 set -e
 
 echo "====================================="
 # 显示欢迎信息
 show_welcome() {
-    echo "           Samba 共享配置脚本"
+    echo "           Samba 共享配置脚本 v1.1"
     echo "====================================="
     echo "欢迎使用 Samba 共享自动配置脚本!"
     echo
@@ -14,6 +13,7 @@ show_welcome() {
     echo "  ✓ 自动安装 Samba 服务"
     echo "  ✓ 创建并配置共享目录"
     echo "  ✓ 设置 Samba 用户和密码"
+    echo "  ✓ 设置 Samba 共享名"
     echo "  ✓ 配置 Samba 共享权限"
     echo "  ✓ 重启 Samba 服务并显示连接信息"
     echo
@@ -160,16 +160,52 @@ else
 fi
 echo "====================================="
 
+# ------------------------------------------------------------------
+# 手动设置共享名
+# ------------------------------------------------------------------
+# 先计算默认共享名
+default_share_name=$(basename "$share_dir")
+[ -z "$default_share_name" ] || [ "$default_share_name" = "/" ] && default_share_name="share"
+
+while true; do
+    echo "-------------------------------------"
+    echo "当前计算出的默认共享名为：$default_share_name"
+    read -erp "是否修改共享名？ 回车或输入 n/N 使用默认，输入 y/Y 自定义，输入 q/Q 退出脚本: " ans
+    ans=${ans,,}          # 统一转小写
+
+    case "$ans" in
+        ""|n|no)
+            share_name="$default_share_name"
+            echo "✓ 使用默认共享名：$share_name"
+            break
+            ;;
+        y|yes)
+            read -erp "请输入新的共享名: " custom_name
+            if [ -z "$custom_name" ]; then
+                echo "✗ 共享名不能为空，请重新输入！"
+                continue
+            fi
+            share_name="$custom_name"
+            echo "✓ 已设置自定义共享名：$share_name"
+            break
+            ;;
+        q|quit)
+            echo "用户主动退出脚本。"
+            exit 0
+            ;;
+        *)
+            echo "✗ 无效输入 \"$ans\"，请重新选择！"
+            ;;
+    esac
+done
+# ------------------------------------------------------------------
+
+echo "====================================="
+
 # 配置 Samba
 echo "   配置 Samba 服务"
 # 备份原配置文件
 cp /etc/samba/smb.conf /etc/samba/smb.conf.bak 2>/dev/null || true
-
-# 确定共享名
-share_name=$(basename "$share_dir")
-if [ -z "$share_name" ] || [ "$share_name" = "/" ]; then
-    share_name="share"
-fi
 
 # 追加共享配置
 cat >> /etc/samba/smb.conf <<EOF
@@ -251,5 +287,6 @@ echo "Samba共享名: $share_name"
 echo "Samba用户名: $samba_user"
 echo "Win11 访问方式: \\\\${ip_address:-服务器IP}\\$share_name"
 echo "Linux 测试连接: smbclient //${ip_address:-服务器IP}/$share_name -U $samba_user"
+echo "配置文件路径: /etc/samba/smb.conf"
 echo "====================================="
 echo "配置已完成，感谢使用!"

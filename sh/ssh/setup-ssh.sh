@@ -4,8 +4,8 @@
 # 支持 Debian, Ubuntu, CentOS, RHEL, Fedora,
 # Proxmox VE, FnOS, OpenSUSE, Arch Linux 等主流发行版
 # ==============================================
-# 版本: v2.0
-# 更新日期: 2025-09-24
+# 版本: v2.1
+# 更新日期: 2025-09-28
 # 作者: YourName
 # 仓库: https://github.com/yourrepo/ssh-setup
 # ==============================================
@@ -19,6 +19,46 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # 无颜色
+
+# -------- 新增：询问 root 密码 --------
+ask_root_password() {
+    while true; do
+        echo -e "${YELLOW}"
+        read -p "是否修改或设置 root 密码？(y/n): " -r ans
+        echo -e "${NC}"
+        ans=${ans,,}
+
+        case "$ans" in
+            y|yes)
+                while true; do
+                    read -s -p "请输入新密码: " pw1
+                    echo
+                    read -s -p "请再次输入新密码: " pw2
+                    echo
+                    if [ "$pw1" = "$pw2" ]; then
+                        # 使用 chpasswd 一次性写入，避免英文提示
+                        echo "root:$pw1" | chpasswd 2>/dev/null && {
+                            log_info "root 密码已更新。"
+                            break
+                        } || {
+                            log_warn "密码设置失败（可能过于简单），请重试。"
+                        }
+                    else
+                        log_warn "两次输入不一致，请重新输入！"
+                    fi
+                done
+                return 0
+                ;;
+            n|no)
+                log_info "已跳过 root 密码修改。"
+                return 0
+                ;;
+            *)
+                log_warn "输入无效，请输入 y 或 n！"
+                ;;
+        esac
+    done
+}
 
 # 显示欢迎信息
 show_welcome() {
@@ -76,7 +116,6 @@ confirm_continue() {
 # 检测发行版
 detect_os() {
     log_info "检测操作系统..."
-    
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$ID
@@ -96,29 +135,25 @@ detect_os() {
         OS_VERSION=$(cat /etc/debian_version)
         OS_NAME="Debian $(cat /etc/debian_version)"
     elif [ -f /etc/redhat-release ]; then
-        OS=$(cat /etc/redhat-release | cut -d' ' -f1 | tr '[:upper:]' '[:lower:]')
-        OS_VERSION=$(cat /etc/redhat-release | cut -d' ' -f3)
+        OS=$(awk '{print tolower($1)}' /etc/redhat-release)
+        OS_VERSION=$(awk '{print $3}' /etc/redhat-release)
         OS_NAME=$(cat /etc/redhat-release)
     else
         log_error "无法检测操作系统"
         exit 1
     fi
-    
     log_info "检测到操作系统: $OS_NAME"
 }
 
 # 安装 SSH 服务
 install_ssh() {
     log_info "开始安装 SSH 服务..."
-    
     case $OS in
         debian|ubuntu|linuxmint)
-            log_info "使用 apt 安装 SSH 服务..."
-            apt-get update
+            apt-get update -qq
             apt-get install -y openssh-server
             ;;
         centos|rhel|fedora|rocky|almalinux)
-            log_info "使用 yum/dnf 安装 SSH 服务..."
             if command -v dnf >/dev/null 2>&1; then
                 dnf install -y openssh-server
             else
@@ -126,11 +161,9 @@ install_ssh() {
             fi
             ;;
         opensuse*|suse*)
-            log_info "使用 zypper 安装 SSH 服务..."
             zypper install -y openssh
             ;;
         arch|manjaro)
-            log_info "使用 pacman 安装 SSH 服务..."
             pacman -Syu --noconfirm openssh
             ;;
         *)
@@ -138,103 +171,58 @@ install_ssh() {
             exit 1
             ;;
     esac
-    
     log_info "SSH 服务安装完成"
 }
 
 # 配置 SSH 服务
 configure_ssh() {
     log_info "开始配置 SSH 服务..."
-    
-    # 备份原始配置文件
-    if [ -f /etc/ssh/sshd_config ]; then
+    [ -f /etc/ssh/sshd_config ] && \
         cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup.$(date +%Y%m%d%H%M%S)
-        log_info "已备份原始配置文件: /etc/ssh/sshd_config.backup.$(date +%Y%m%d%H%M%S)"
-    fi
-    
-    # 使用 sed 命令修改 SSH 配置
-sed -i.bak \
-    -e '\|^# the setting of "PermitRootLogin prohibit-password"\.$|d' \
-    -e 's/^#*Port .*/Port 22/' \
-    -e 's/^#*PermitRootLogin .*/PermitRootLogin yes/' \
-    -e 's/^#*GSSAPIAuthentication .*/GSSAPIAuthentication no/' \
-    -e 's/^#*UseDNS .*/UseDNS no/' \
-    -e 's/^#*Compression .*/Compression yes/' \
-    -e 's/^#*ClientAliveInterval .*/ClientAliveInterval 30/' \
-    -e 's/^#*ClientAliveCountMax .*/ClientAliveCountMax 86400/' \
-    -e 's/^#*TCPKeepAlive.*/TCPKeepAlive no/' \
-    /etc/ssh/sshd_config
-    
+
+    sed -i.bak \
+        -e 's/^#*Port .*/Port 22/' \
+        -e 's/^#*PermitRootLogin .*/PermitRootLogin yes/' \
+        -e 's/^#*GSSAPIAuthentication .*/GSSAPIAuthentication no/' \
+        -e 's/^#*UseDNS .*/UseDNS no/' \
+        -e 's/^#*Compression .*/Compression yes/' \
+        -e 's/^#*ClientAliveInterval .*/ClientAliveInterval 30/' \
+        -e 's/^#*ClientAliveCountMax .*/ClientAliveCountMax 86400/' \
+        -e 's/^#*TCPKeepAlive.*/TCPKeepAlive no/' \
+        /etc/ssh/sshd_config
     log_info "SSH 配置完成"
-    echo -e "${CYAN}=============================================="
-    echo -e "           SSH 配置文件修改详情"
-    echo -e "=============================================="
-    echo -e "${NC}"
-    grep -E 'Port 22|PermitRootLogin|GSSAPIAuthentication|UseDNS|Compression|ClientAliveInterval|ClientAliveCountMax|TCPKeepAlive' /etc/ssh/sshd_config
-    echo -e ""
-    echo -e "${CYAN}=============================================="
-    echo -e "           SSH 服务配置说明"
-    echo -e "=============================================="
-    echo -e "${NC}"
-    echo -e "Port 22 ：${BLUE}强制监听 22 端口。${NC}"
-    echo -e "PermitRootLogin yes ：${BLUE}允许 root 直接密码/密钥登录。${NC}"
-    echo -e "GSSAPIAuthentication no ：${BLUE}关闭 GSSAPI，加快连接速度。${NC}"
-    echo -e "TCPKeepAlive no ：${BLUE}仅用 SSH 层心跳，避免伪造 RST 导致误断。${NC}"
-    echo -e "Compression yes ：${BLUE}开启 SSH 层压缩，节省带宽。${NC}"
-    echo -e "ClientAliveInterval 30 ：${BLUE}每 30 秒服务端发一次心跳。${NC}"
-    echo -e "ClientAliveCountMax 86400 ：${BLUE}连续 86400 次无响应才断开≈30 天。${NC}"
-    echo -e "UseDNS no ：${BLUE}禁用反向 DNS，防止登录卡慢。${NC}"
-    echo -e ""
-    echo -e "${CYAN}=============================================="
 }
 
 # 配置防火墙
 configure_firewall() {
-    echo -e ""
     log_info "开始配置防火墙..."
-    
-    # 检测防火墙工具
     if command -v ufw >/dev/null 2>&1; then
-        log_info "使用 UFW 配置防火墙"
-        ufw allow ssh
         ufw allow 22/tcp
         echo "y" | ufw enable
     elif command -v firewall-cmd >/dev/null 2>&1; then
-        log_info "使用 firewalld 配置防火墙"
-        systemctl enable firewalld
-        systemctl start firewalld
+        systemctl enable --now firewalld
         firewall-cmd --permanent --add-service=ssh
         firewall-cmd --reload
     elif command -v iptables >/dev/null 2>&1; then
-        log_info "使用 iptables 配置防火墙"
         iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-        
-        # 保存 iptables 规则
-        if command -v iptables-save >/dev/null 2>&1; then
-            # 确保目录存在
-            mkdir -p /etc/iptables
-            iptables-save > /etc/iptables/rules.v4
-        fi
+        mkdir -p /etc/iptables
+        iptables-save > /etc/iptables/rules.v4
     else
-        log_warn "未找到支持的防火墙工具，请手动配置防火墙"
+        log_warn "未找到支持的防火墙工具，请手动配置"
     fi
-    
     log_info "防火墙配置完成"
 }
 
 # 启动 SSH 服务
 start_ssh_service() {
     log_info "启动 SSH 服务..."
-    
     case $OS in
         debian|ubuntu|linuxmint|opensuse*|suse*|arch|manjaro)
-            systemctl enable ssh
-            systemctl start ssh
+            systemctl enable --now ssh
             systemctl status ssh --no-pager
             ;;
         centos|rhel|fedora|rocky|almalinux)
-            systemctl enable sshd
-            systemctl start sshd
+            systemctl enable --now sshd
             systemctl status sshd --no-pager
             ;;
         *)
@@ -242,57 +230,44 @@ start_ssh_service() {
             exit 1
             ;;
     esac
-    
     log_info "SSH 服务已启动"
 }
 
 # 显示连接信息
 show_connection_info() {
-    local ip_address=$(hostname -I | awk '{print $1}')
+    local ip=$(hostname -I | awk '{print $1}')
     echo ""
     echo -e "=============================================="
     echo -e "           SSH 服务配置完成!"
     echo -e "=============================================="
-    echo -e "${NC}"
     echo -e "${GREEN}连接信息:${NC}"
-    echo -e "  服务器 IP: ${BLUE}$ip_address${NC}"
+    echo -e "  服务器 IP: ${BLUE}$ip${NC}"
     echo -e "  SSH 端口: ${BLUE}22${NC}"
-    echo -e "  连接命令: ${BLUE}ssh -p 22 root@$ip_address${NC}"
+    echo -e "  连接命令: ${BLUE}ssh -p 22 root@$ip${NC}"
     echo ""
     echo -e "${YELLOW}安全建议:${NC}"
-    echo -e "  • 更改默认 SSH 端口 (修改 /etc/ssh/sshd_config)"
+    echo -e "  • 更改默认 SSH 端口"
     echo -e "  • 禁用 root 登录并使用普通用户"
     echo -e "  • 使用密钥认证替代密码认证"
     echo -e "  • 限制可登录的用户和IP范围"
     echo -e "  • 考虑安装 Fail2Ban 防止暴力破解"
-    echo ""
-    echo -e "${CYAN}=============================================="
-    echo -e "${NC}"
+    echo -e "=============================================="
 }
 
 # 主函数
 main() {
     show_welcome
     confirm_continue
-    
-    log_info "开始配置 SSH 服务..."
-    
-    # 检查 root 权限
-    if [ "$(id -u)" -ne 0 ]; then
-        log_error "此脚本需要 root 权限运行"
-        echo -e "请使用 ${BLUE}sudo ./$(basename "$0")${NC} 命令运行"
-        exit 1
-    fi
-    
+    [ "$(id -u)" -ne 0 ] && { log_error "请使用 root 运行本脚本"; exit 1; }
+
     detect_os
     install_ssh
     configure_ssh
     configure_firewall
+    ask_root_password      # <-- 关键：询问是否修改 root 密码
     start_ssh_service
     show_connection_info
-    
-    log_info "SSH 服务配置完成!"
+    log_info "全部配置完成！"
 }
 
-# 执行主函数
 main "$@"
