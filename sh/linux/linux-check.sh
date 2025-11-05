@@ -6,7 +6,21 @@ show_system_info() {
     RED='\033[1;31m'
     GREEN='\033[1;32m'
     BLUE='\033[1;34m'
+    PURPLE='\033[1;35m'
     NC='\033[0m' # No Color
+
+    # ================== 欢迎语（仅此处显示一次）==================
+    echo -e "${PURPLE}"
+    cat <<'WELCOME'
+                 _            __             
+ _ __ ___   ___ | |__  _   _ / _| __ _ _ __  
+| '_ ` _ \ / _ \| '_ \| | | | |_ / _` | '_ \ 
+| | | | | | (_) | |_) | |_| |  _| (_| | | | |
+|_| |_| |_|\___/|_.__/ \__,_|_|  \__,_|_| |_|
+
+WELCOME
+    echo -e "${NC}"
+    # ============================================
 
     # 📊 获取系统信息函数
     get_local_ip() {
@@ -18,10 +32,8 @@ show_system_info() {
     }
 
     get_uptime() {
-        # 获取系统运行时间（秒）
         uptime_seconds=$(awk '{print int($1)}' /proc/uptime 2>/dev/null)
         if [ -n "$uptime_seconds" ]; then
-            # 计算小时和分钟
             hours=$((uptime_seconds / 3600))
             minutes=$(( (uptime_seconds % 3600) / 60 ))
             echo "${hours}时 ${minutes}分"

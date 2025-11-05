@@ -35,10 +35,13 @@ log(){
 
 #-------------- 横幅 --------------
 echo -e "\033[1;36m
-╔══════════════════════════════════════════════════════════════╗
-║     多目录/文件增量同步工具  rsync.sh  \033[1;33m★ v1.2 ★\033[1;36m            ║
-║        一键多目标 · 彩色日志 · 完成度估算 · 耗时统计         ║
-╚══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════╗
+║  多目录/文件增量同步工具  rsync.sh  \033[1;33m★ v1.3 ★\033[1;36m                         ║
+║  一键多目标 · 彩色日志 · 完成度估算 · 耗时统计                       ║
+║  使用说明：                                                          ║
+║    - 多目录同步：rsync.sh /etc/nginx /backup/nginx /mnt/nginx        ║
+║    - 多文件同步：rsync.sh -f test.txt /backup/test.txt /mnt/test.txt ║
+╚══════════════════════════════════════════════════════════════════════╝
 \033[0m"
 
 #-------------- 模式识别 --------------
@@ -97,7 +100,7 @@ sync_and_check(){
     rsync -avh --progress "$source_path" "$tgt" 2>&1 | tee -a "$LOG_FILE"
   else
     log "$PURPLE" "开始同步目录：$source_path/  →  $tgt/"
-    rsync -avhzp --progress --delete "$source_path/" "$tgt/" 2>&1 | tee -a "$LOG_FILE"
+    rsync -avhzp --progress --no-links --delete "$source_path/" "$tgt/" 2>&1 | tee -a "$LOG_FILE"
   fi
   local st=${PIPESTATUS[0]}
 
@@ -140,4 +143,5 @@ else
 fi
 log "$CYAN"  "----------------------------------------"
 log "$GREEN" "完整日志已保存至：$LOG_FILE"
+log "$WHITE" "============================================="
 { echo "========== rsync.sh 结束：$(date '+%F %T') =========="; echo ""; } >> "$LOG_FILE"
