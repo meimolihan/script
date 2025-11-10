@@ -31,7 +31,7 @@
 
 ### 直接运行（推荐）🎯
 ```bash
-bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/check.sh)
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/install/check.sh)
 ```
 
 
