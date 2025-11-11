@@ -1,5 +1,5 @@
 #!/bin/bash
-sh_v="1.1.9"
+sh_v="1.2.2"
 
 
 gl_hui='\e[37m'
@@ -56,80 +56,151 @@ get_internal_ip() {
 }
 
 
-# 函数：安全读取输入（支持回退，不删除提示）
+
+# 增强版安全读取函数（支持默认值、验证、退出功能、和数字范围检查）
 safe_read() {
     local prompt="$1"
     local variable="$2"
-    local default_value="$3"
+    local validation="${3:-any}"  # 验证类型：number, file, dir, confirm, any（默认）
+    local default_value="$4"      # 默认值
+    local min="$5"                # 数字最小值（仅对number类型有效）
+    local max="$6"                # 数字最大值（仅对number类型有效）
+    
+    # 保存原始终端设置
+    local orig_stty=""
+    if [ -t 0 ]; then
+        orig_stty=$(stty -g 2>/dev/null)
+        stty sane 2>/dev/null
+        stty erase '^?' 2>/dev/null
+    fi
     
     while true; do
-        # 使用 read -p 参数来避免换行问题
-        if [ -n "$default_value" ]; then
-            read -e -p "$(echo -e "${YELLOW}${prompt} [默认: ${default_value}]: ${NC}")" input_value
-            # 如果用户只按回车且有默认值，使用默认值
-            if [ -z "$input_value" ]; then
-                input_value="$default_value"
+        local input_value=""
+        
+        # 构建提示信息（支持默认值显示）
+        local full_prompt=""
+        if [ "$validation" = "confirm" ]; then
+            # 确认类型的特殊提示格式
+            if [ -n "$default_value" ]; then
+                case "$default_value" in
+                    y|Y|yes|YES|是|确认)
+                        full_prompt="${prompt} [Y/n]: "
+                        ;;
+                    n|N|no|NO|否|取消)
+                        full_prompt="${prompt} [y/N]: "
+                        ;;
+                    *)
+                        full_prompt="${prompt} [y/N]: "
+                        ;;
+                esac
+            else
+                full_prompt="${prompt} [y/N]: "
             fi
+        elif [ -n "$default_value" ]; then
+            full_prompt="${prompt} [默认: ${default_value}]: "
         else
-            read -e -p "$(echo -e "${YELLOW}${prompt}: ${NC}")" input_value
+            full_prompt="${prompt}: "
         fi
         
-        # 检查输入是否为空
-        if [ -z "$input_value" ]; then
-            echo -e "\r${RED}错误: 输入不能为空，请重新输入${NC}"
+        # 读取输入（支持回退编辑）
+        read -e -p "$full_prompt" input_value
+        
+        # 处理默认值：如果用户只按回车且有默认值，使用默认值
+        if [ -z "$input_value" ] && [ -n "$default_value" ]; then
+            input_value="$default_value"
+        fi
+        
+        # 对于confirm类型，空输入视为"n"
+        if [ "$validation" = "confirm" ] && [ -z "$input_value" ] && [ -z "$default_value" ]; then
+            input_value="n"
+        fi
+        
+        # 检查输入是否为空（confirm类型允许空输入，因为已处理默认值）
+        if [ -z "$input_value" ] && [ "$validation" != "confirm" ]; then
+            echo "错误: 输入不能为空，请重新输入"
             continue
         fi
         
         # 检查是否要退出
         if [ "$input_value" = "q" ] || [ "$input_value" = "quit" ] || [ "$input_value" = "exit" ]; then
-            echo -e "${YELLOW}退出操作${NC}"
+            echo "退出操作"
+            [ -n "$orig_stty" ] && stty "$orig_stty" 2>/dev/null
             return 1
         fi
         
-        # 将值赋给变量
-        eval "$variable=\"$input_value\""
+        # 输入验证
+        case "$validation" in
+            number)
+                if [[ ! "$input_value" =~ ^[0-9]+$ ]]; then
+                    echo "错误: 请输入有效的数字"
+                    continue
+                fi
+                
+                # 数字范围检查（如果提供了min或max参数）
+                if [ -n "$min" ] && [ "$input_value" -lt "$min" ]; then
+                    echo "错误: 数字不能小于 $min"
+                    continue
+                fi
+                
+                if [ -n "$max" ] && [ "$input_value" -gt "$max" ]; then
+                    echo "错误: 数字不能大于 $max"
+                    continue
+                fi
+                ;;
+            file)
+                # 扩展路径中的 ~ 和变量
+                local expanded_path
+                eval "expanded_path=\"$input_value\""
+                if [[ ! -f "$expanded_path" ]]; then
+                    echo "错误: 文件 '$input_value' 不存在，请重新输入"
+                    continue
+                fi
+                ;;
+            dir)
+                # 扩展路径中的 ~ 和变量
+                local expanded_path
+                eval "expanded_path=\"$input_value\""
+                if [[ ! -d "$expanded_path" ]]; then
+                    echo "错误: 目录 '$input_value' 不存在，请重新输入"
+                    continue
+                fi
+                ;;
+            confirm)
+                # 转换为小写
+                input_value=$(echo "$input_value" | tr '[:upper:]' '[:lower:]')
+                
+                # 处理各种确认输入
+                case "$input_value" in
+                    y|yes|是|确认)
+                        input_value="y"
+                        ;;
+                    n|no|否|取消|"")
+                        input_value="n"
+                        ;;
+                    *)
+                        echo "错误: 请输入 y 或 n"
+                        continue
+                        ;;
+                esac
+                ;;
+            any)
+                # 任何非空输入都接受
+                ;;
+            *)
+                echo "错误: 未知的验证类型: $validation"
+                [ -n "$orig_stty" ] && stty "$orig_stty" 2>/dev/null
+                return 1
+                ;;
+        esac
+        
+        # 安全地将值赋给变量
+        printf -v "$variable" "%s" "$input_value"
+        [ -n "$orig_stty" ] && stty "$orig_stty" 2>/dev/null
         return 0
     done
-}
-
-# 函数：安全读取数字输入
-safe_read_number() {
-    local prompt="$1"
-    local variable="$2"
-    local min="$3"
-    local max="$4"
     
-    while true; do
-        # 使用 read -p 参数来避免换行问题
-        read -e -p "$(echo -e "${YELLOW}${prompt}: ${NC}")" input_value
-        
-        # 检查是否要退出
-        if [ "$input_value" = "q" ] || [ "$input_value" = "quit" ] || [ "$input_value" = "exit" ]; then
-            echo -e "${YELLOW}退出操作${NC}"
-            return 1
-        fi
-        
-        # 检查是否为数字
-        if ! [[ "$input_value" =~ ^[0-9]+$ ]]; then
-            echo -e "\r${RED}错误: 请输入有效的数字${NC}"
-            continue
-        fi
-        
-        # 检查范围
-        if [ -n "$min" ] && [ "$input_value" -lt "$min" ]; then
-            echo -e "\r${RED}错误: 数字不能小于 $min${NC}"
-            continue
-        fi
-        
-        if [ -n "$max" ] && [ "$input_value" -gt "$max" ]; then
-            echo -e "\r${RED}错误: 数字不能大于 $max${NC}"
-            continue
-        fi
-        
-        # 将值赋给变量
-        eval "$variable=\"$input_value\""
-        return 0
-    done
+    # 恢复终端设置
+    [ -n "$orig_stty" ] && stty "$orig_stty" 2>/dev/null
 }
 
 
@@ -4271,7 +4342,6 @@ frps_panel() {
 				install jq grep ss
 				install_docker
 				generate_frps_config
-
 				add_app_id
 				echo "FRP服务端已经安装完成"
 				;;
@@ -4308,25 +4378,21 @@ frps_panel() {
 				echo "域名格式 example.com 不带https://"
 				web_del
 				;;
-
 			7)
 				send_stats "允许IP访问"
 				read -e -p "请输入需要放行的端口: " frps_port
 				clear_host_port_rules "$frps_port" "$ipv4_address"
 				;;
-
 			8)
 				send_stats "阻止IP访问"
 				echo "如果你已经反代域名访问了，可用此功能阻止IP+端口访问，这样更安全。"
 				read -e -p "请输入需要阻止的端口: " frps_port
 				block_host_port "$frps_port" "$ipv4_address"
 				;;
-
 			00)
 				send_stats "刷新FRP服务状态"
 				echo "已经刷新FRP服务状态"
 				;;
-
 			*)
 				break
 				;;
@@ -12786,21 +12852,21 @@ EOF
 
 
 
-# 函数：创建并编辑文件（增强版，支持更好的回退功能）
+# 函数：创建并编辑文件
 create_file() {
     while true; do
         echo -e "${gl_bufan}创建文件${gl_bai}"
         echo "----------------------------------------"
         
         # 使用增强的安全读取函数
-        if ! safe_read_enhanced "请输入文件名(输入q退出)" file_name; then
+        if ! safe_read "请输入文件名(输入q退出)" file_name; then
             return
         fi
         
         # 检查文件是否已存在
         if [ -e "$file_name" ]; then
             echo -e "${gl_hong}错误: 文件 '$file_name' 已存在${gl_bai}"
-            if ! safe_read_confirm "是否覆盖" overwrite; then
+            if ! safe_read "是否覆盖（y/n）" overwrite; then
                 continue
             fi
             if [ "$overwrite" != "y" ]; then
@@ -12820,7 +12886,7 @@ create_file() {
         
         while true; do
             # 使用增强的读取函数，支持完整的行编辑
-            if ! safe_read_enhanced "> " line; then
+            if ! safe_read "> " line; then
                 echo -e "${gl_huang}已取消输入${gl_bai}"
                 rm -f "$temp_file"
                 continue 2
@@ -12858,7 +12924,7 @@ create_file() {
         
         # 根据文件后缀提示添加权限
         if [[ "$file_name" =~ \.sh$ ]] || [[ "$file_name" =~ \.py$ ]] || [[ "$file_name" =~ \.pl$ ]]; then
-            if ! safe_read_confirm "检测到脚本文件，是否添加执行权限" add_exec; then
+            if ! safe_read "检测到脚本文件，是否添加执行权限（y/n）" add_exec; then
                 continue
             fi
             if [ "$add_exec" = "y" ]; then
@@ -12867,7 +12933,7 @@ create_file() {
             fi
         fi
         
-        if ! safe_read_confirm "是否继续创建其他文件" continue_create; then
+        if ! safe_read "是否继续创建其他文件（y/n）" continue_create; then
             break
         fi
         if [ "$continue_create" != "y" ]; then
@@ -12876,100 +12942,18 @@ create_file() {
     done
 }
 
-# 增强的安全读取函数（更好的回退支持）
-safe_read_enhanced() {
-    local prompt="$1"
-    local variable="$2"
-    local input_value=""
-    
-    # 设置更友好的 readline 配置
-    local orig_stty
-    orig_stty=$(stty -g)
-    
-    # 配置终端以支持更好的编辑体验
-    stty sane
-    stty erase '^?'  # 确保退格键正常工作
-    stty kill '^U'   # 设置 Ctrl+U 为删除整行
-    
-    # 读取输入，使用 -e 启用 readline 支持
-    if read -e -r -p "$(echo -e "${prompt}") " input_value; then
-        # 检查退出条件
-        case "$input_value" in
-            q|quit|exit)
-                echo -e "${YELLOW}退出操作${NC}"
-                stty "$orig_stty"
-                return 1
-                ;;
-            *)
-                eval "$variable=\"$input_value\""
-                stty "$orig_stty"
-                return 0
-                ;;
-        esac
-    else
-        # 读取失败（如 Ctrl+D）
-        stty "$orig_stty"
-        return 1
-    fi
-}
 
-# 安全的读取确认函数（优化版）
-safe_read_confirm() {
-    local prompt="$1"
-    local variable="$2"
-    local input_value=""
-    local orig_stty
-    
-    orig_stty=$(stty -g)
-    stty sane
-    stty erase '^?'
-    
-    while true; do
-        # 使用 read -e 支持行编辑
-        if ! read -e -r -p "$(echo -e "${YELLOW}${prompt} [y/N]: ${NC}")" input_value; then
-            stty "$orig_stty"
-            return 1
-        fi
-        
-        # 转换为小写
-        input_value=$(echo "$input_value" | tr '[:upper:]' '[:lower:]')
-        
-        # 检查是否要退出
-        if [ "$input_value" = "q" ] || [ "$input_value" = "quit" ] || [ "$input_value" = "exit" ]; then
-            echo -e "${YELLOW}退出操作${NC}"
-            stty "$orig_stty"
-            return 1
-        fi
-        
-        # 处理各种确认输入
-        case "$input_value" in
-            y|yes|Y|YES|是|确认)
-                eval "$variable=\"y\""
-                stty "$orig_stty"
-                return 0
-                ;;
-            n|no|N|NO|否|取消|"")
-                eval "$variable=\"n\""
-                stty "$orig_stty"
-                return 0
-                ;;
-            *)
-                echo -e "\r${RED}错误: 请输入 y 或 n${NC}"
-                ;;
-        esac
-    done
-    stty "$orig_stty"
-}
+
+
 
 linux_file() {
 	root_use
 	send_stats "文件管理器"
 	while true; do
 		clear
-		echo "文件管理器"
+                echo -e "${gl_zi}>>> 文件管理器${gl_bai}"
 		echo "------------------------"
-		echo "当前路径"
-		pwd
+                echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
 		echo "------------------------"
 		ls --color=auto -x
 		echo "------------------------"
@@ -12981,6 +12965,8 @@ linux_file() {
 		echo "------------------------"
 		echo "21. 压缩文件目录    22. 解压文件目录      23. 解压压缩工具      24. 移动文件目录      "
 		echo "25. 复制文件目录    26. 传文件至其他服务器"
+		echo "------------------------"
+		echo "99. 文件回收站"
 		echo "------------------------"
 		echo "0.  返回上一级选单"
 		echo "------------------------"
@@ -13081,10 +13067,11 @@ linux_file() {
 				send_stats "解压文件/目录"
 				;;
 			23) # 解压压缩工具
+		                clear
                                 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-                                   compress_tool "$@"
+                                    compress_tool "$@"
                                 fi
-				;;
+			        ;;
 			24) # 移动文件或目录
 				read -e -p "请输入要移动的文件或目录路径: " src_path
 				if [ ! -e "$src_path" ]; then
@@ -13174,6 +13161,11 @@ EOF
 
 				break_end
 				;;
+			99)  # 文件回收站
+				send_stats "文件回收站"
+                                manage_trash_menu
+                                break
+				;;
 			0)  # 返回上一级选单
 				send_stats "返回上一级选单菜单"
                                 break
@@ -13232,7 +13224,6 @@ run_commands_on_servers() {
 
 
 mobufan_update() {
-
 send_stats "脚本更新"
 cd ~
 while true; do
@@ -13356,8 +13347,8 @@ linux_pve_menu() {
 	  # send_stats "PVE 命令"
 	  echo -e "PVE 命令"
           echo -e "${gl_bufan}------------------------${gl_bai}"
-          echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-          echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)"
+          echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+          echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)${gl_bai}"
           echo -e "${gl_bufan}------------------------${gl_bai}"
           echo -e "${gl_bufan}1.   ${gl_bai}查看所有虚拟机"
           echo -e "${gl_bufan}------------------------${gl_bai}"
@@ -13380,13 +13371,23 @@ linux_pve_menu() {
 	  read -e -p "请输入你的选择: " sub_choice
 	  case $sub_choice in
 		  1)
-			clear
 			send_stats "查看PVE虚拟机"
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
+			clear
 			pvesh get /cluster/resources
                         break_end
 			;;
 		  2)
                          # 启动虚拟机
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
                          if safe_read "请输入要启动的虚拟机ID(多个用空格隔开，输入q退出)" vm_ids; then
                              if [ -n "$vm_ids" ]; then
                                   for vm_id in $vm_ids; do
@@ -13399,9 +13400,13 @@ linux_pve_menu() {
                          fi
                          break_end
                          ;;
-
 		  3)
-                         # 关闭虚拟机
+                        # 关闭虚拟机
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
                         if safe_read "请输入要关闭的虚拟机ID(多个用空格隔开，输入q退出)" vm_ids; then
                             if [ -n "$vm_ids" ]; then
                                 for vm_id in $vm_ids; do
@@ -13416,6 +13421,11 @@ linux_pve_menu() {
                         ;;
 		  4)
                          # 启动LXC容器
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
                         if safe_read "请输入要启动的容器ID(多个用空格隔开，输入q退出)" ct_ids; then
                             if [ -n "$ct_ids" ]; then
                                 for ct_id in $ct_ids; do
@@ -13429,7 +13439,12 @@ linux_pve_menu() {
                         break_end
                         ;;
 		  5)
-                         # 关闭LXC容器
+                        # 关闭LXC容器
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
                         if safe_read "请输入要关闭的容器ID(多个用空格隔开，输入q退出)" ct_ids; then
                             if [ -n "$ct_ids" ]; then
                                 for ct_id in $ct_ids; do
@@ -13444,25 +13459,46 @@ linux_pve_menu() {
                         ;;
 		  6)
                         # 管理备份目录
+                        if [ ! -d "/var/lib/vz/dump" ]; then
+                             echo -e "${gl_huang}错误：目录 /var/lib/vz/dump 不存在。${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
+                        clear
                         cd /var/lib/vz/dump && linux_file
                         ;;
 		  7)
                         # 管理固件目录
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：目录 /var/lib/vz/template/iso 不存在。${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
+                        clear
                         cd /var/lib/vz/template/iso && linux_file
-                        ;;
+                       ;;
 		  8)
-			clear
 			send_stats "PVE 更新并清理系统"
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
+			clear
                         sudo apt update && sudo apt -y dist-upgrade && sudo apt autoremove --purge && sudo apt clean
                         break_end
 		        ;;
 		  9)
-			clear
 			send_stats "PVE 优化脚本"
+                        if [ ! -d "/var/lib/vz/template/iso" ]; then
+                             echo -e "${gl_huang}错误：这不是PVE系统！${gl_bai}"
+                             read -p "按任意键返回主菜单..."
+                             continue
+                        fi
+		        clear
 wget  -q  -O  /root/pve_source.tar.gz 'https://gitee.com/meimolihan/script/raw/master/sh/pve/pve_source.tar.gz' &&  tar  zxvf  /root/pve_source.tar.gz  &&  /root/./pve_source
-                        break_end
-		        ;;
-
+                       break_end
+		       ;;
 		   0)
 		        send_stats "返回主菜单"
 		        mobufan_sh
@@ -13494,11 +13530,10 @@ show_compose_project_menu() {
     while true; do
         clear
         echo -e "${gl_bufan}"
-        echo "Compose 项目列表 - $base_path"
+        echo -e "${gl_bufan}Compose 项目列表 - ${gl_huang}$base_path${gl_bai}"
         echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)"
-        # echo -e "${gl_bufan}基础路径: ${gl_huang}$base_path${gl_bai}"
+        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)${gl_bai}"
         echo -e "${gl_bufan}------------------------${gl_bai}"
         
         # 获取目录列表并排序
@@ -13520,26 +13555,43 @@ show_compose_project_menu() {
         IFS=$'\n' projects=($(sort <<<"${projects[*]}"))
         unset IFS
         
-        # 显示项目列表，每行两个
+        # 显示项目列表，横向排列
         count=0
+        local items_per_line=4  # 每行显示4个项目
+        local max_length=0
+        
+        # 计算最长项目名的长度，用于对齐
+        for project in "${projects[@]}"; do
+            local len=${#project}
+            if [ $len -gt $max_length ]; then
+                max_length=$len
+            fi
+        done
+        
+        max_length=$((max_length + 4))  # 增加一些间距
+        
         for project in "${projects[@]}"; do
             count=$((count + 1))
-            printf "${gl_bufan}%2d. ${gl_bai}进入 %-30s" "$count" "$project"
-            # 每行显示两个项目
-            if [ $((count % 2)) -eq 0 ]; then
+            # 使用黄色显示序号，白色显示项目名
+            printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$count" "$project"
+            
+            # 每行显示指定数量的项目后换行
+            if [ $((count % items_per_line)) -eq 0 ]; then
                 echo ""
             fi
         done
         
-        # 如果项目数是奇数，确保最后换行
-        if [ $((count % 2)) -eq 1 ]; then
+        # 如果最后一行不满，确保换行
+        if [ $((count % items_per_line)) -ne 0 ]; then
             echo ""
         fi
         
-	echo -e "${gl_bufan}------------------------"
+        echo -e "${gl_bufan}------------------------"
         echo -e "${gl_bufan}0. ${gl_bai}返回上一级"
-	echo -e "${gl_bufan}------------------------"
-        if ! safe_read_number "请输入（序号）选择" project_choice 0 $count; then
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        
+        # 修复这里：使用正确的参数顺序调用 safe_read
+        if ! safe_read "请输入（序号）选择" project_choice "number" "" 0 $count; then
             continue
         fi
         
@@ -13548,12 +13600,29 @@ show_compose_project_menu() {
         elif [ "$project_choice" -ge 1 ] && [ "$project_choice" -le $count ]; then
             local selected_project="${projects[$((project_choice - 1))]}"
             local full_path="$base_path/$selected_project"
-            echo -e "${GREEN}已选择项目: $selected_project"
-            echo -e "${BLUE}项目路径: $full_path"
-            cd "$full_path"
-            show_compose_commands_menu
+            
+            # 修复这里：检查目录是否存在并可以进入
+            if [ ! -d "$full_path" ]; then
+                echo -e "${gl_hong}错误: 目录 '$full_path' 不存在${gl_bai}"
+                echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+                read -n 1 -s
+                continue
+            fi
+            
+            # 尝试进入目录
+            if cd "$full_path" 2>/dev/null; then
+                echo -e "${gl_lv}已选择项目: $selected_project"
+                echo -e "${gl_lan}项目路径: $full_path${gl_bai}"
+                show_compose_commands_menu
+                # 返回项目列表后，回到基础路径
+                cd "$base_path"
+            else
+                echo -e "${gl_hong}错误: 无法进入目录 '$full_path'${gl_bai}"
+                echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+                read -n 1 -s
+            fi
         else
-            echo -e "${gl_huang}无效的选择，请重新输入"
+            echo -e "${gl_huang}无效的选择，请重新输入${gl_bai}"
             sleep 1
         fi
     done
@@ -13561,86 +13630,105 @@ show_compose_project_menu() {
 
 # 函数：显示Compose命令菜单
 show_compose_commands_menu() {
+    local current_dir="$(pwd)"
+    
     while true; do
         clear
         echo -e "${gl_bufan}"
         echo -e "Compose 命令菜单"
         echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)"
+        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$current_dir${gl_bai}"
+        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)${gl_bai}"
         echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_huang}请选择要执行的 Compose 命令："
-        echo -e "${gl_bufan}1.   ${gl_bai}启动服务"
-        echo -e "${gl_bufan}2.   ${gl_bai}停止服务"
-        echo -e "${gl_bufan}3.   ${gl_bai}重启服务"
+        echo -e "${gl_huang}请选择要执行的 Compose 命令：${gl_bai}"
+        
+        # 使用横向排列显示命令选项
+        echo -e "${gl_huang}${gl_bufan}1. ${gl_bai}启动服务        ${gl_huang}${gl_bufan}2. ${gl_bai}停止服务        ${gl_huang}${gl_bufan}3. ${gl_bai}重启服务"
+        echo -e "${gl_huang}${gl_bufan}4. ${gl_bai}更新容器        ${gl_huang}${gl_bufan}5. ${gl_bai}查看配置        ${gl_huang}${gl_bufan}6. ${gl_bai}编辑配置"
+        echo -e "${gl_huang}${gl_bufan}7. ${gl_bai}服务状态        ${gl_huang}${gl_bufan}8. ${gl_bai}服务日志        ${gl_huang}${gl_bufan}9. ${gl_bai}重新构建"
         echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}4.   ${gl_bai}查看配置文件"
-        echo -e "${gl_bufan}5.   ${gl_bai}编辑配置文件"
-        echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}6.   ${gl_bai}查看服务状态"
-        echo -e "${gl_bufan}7.   ${gl_bai}查看服务日志"
-        echo -e "${gl_bufan}8.   ${gl_bai}重新构建并启动"
-        echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}0.   ${gl_bai}返回项目列表"
+        echo -e "${gl_huang}${gl_bufan}0. ${gl_bai}返回项目列表"
         echo -e "${gl_bufan}------------------------${gl_bai}"
         
-        if ! safe_read_number "请输入选择" cmd_choice 0 9; then
+        # 修复这里：使用正确的参数顺序调用 safe_read
+        if ! safe_read "请输入选择" cmd_choice "number" "" 0 9; then
             continue
         fi
         
         case $cmd_choice in
             1)
                 # 启动服务
+                echo -e "${gl_lv}正在启动服务...${gl_bai}"
                 docker-compose up -d
-	        break_end
+                break_end
                 ;;
             2)
                 # 停止服务
+                echo -e "${gl_huang}正在停止服务...${gl_bai}"
                 docker-compose down
-	        break_end
+                break_end
                 ;;
             3)
                 # 重启服务
+                echo -e "${gl_lan}正在重启服务...${gl_bai}"
                 docker-compose restart
-	        break_end
+                break_end
                 ;;
             4)
-                # 查看配置文件
-                cat docker-compose.yml
-	        break_end
+                # 更新容器
+                echo -e "${gl_zi}正在更新容器...${gl_bai}"
+                docker-compose down && docker-compose pull && docker-compose up -d && docker image prune -f
+                break_end
                 ;;
             5)
-                # 编辑配置文件
-                nano docker-compose.yml
-	        break_end
+                # 查看配置文件
+                echo -e "${gl_bufan}正在显示配置文件内容...${gl_bai}"
+                if [ -f "docker-compose.yml" ]; then
+                    cat docker-compose.yml
+                else
+                    echo -e "${gl_hong}错误: docker-compose.yml 文件不存在${gl_bai}"
+                fi
+                break_end
                 ;;
             6)
-                # 查看服务状态
-                docker-compose ps
-	        break_end
+                # 编辑配置文件
+                echo -e "${gl_huang}正在打开配置文件编辑器...${gl_bai}"
+                if [ -f "docker-compose.yml" ]; then
+                    nano docker-compose.yml
+                else
+                    echo -e "${gl_hong}错误: docker-compose.yml 文件不存在${gl_bai}"
+                fi
+                break_end
                 ;;
             7)
-                # 查看服务日志
-                docker-compose logs
-	        break_end
+                # 查看服务状态
+                echo -e "${gl_lv}正在显示服务状态...${gl_bai}"
+                docker-compose ps
+                break_end
                 ;;
             8)
-                # 重新构建并启动
-                docker-compose up -d --build
-	        break_end
+                # 查看服务日志
+                echo -e "${gl_lan}正在显示服务日志...${gl_bai}"
+                docker-compose logs
+                break_end
                 ;;
-	    0)
-		 send_stats "返回上一级选单"
-		 break # 跳出循环，退出菜单
-		 ;;
-	      *)
-		  echo "无效的选择，请重新输入"
-		  send_stats "无效选择"
-		  ;;
-	esac
-done
+            9)
+                # 重新构建并启动
+                echo -e "${gl_zi}正在重新构建并启动服务...${gl_bai}"
+                docker-compose up -d --build
+                break_end
+                ;;
+            0)
+                send_stats "返回上一级选单"
+                break # 跳出循环，退出菜单
+                ;;
+            *)
+                echo -e "${gl_hong}无效的选择，请重新输入${gl_bai}"
+                send_stats "无效选择"
+                ;;
+        esac
+    done
 }
-
 
 
 # 函数_FnOS 命令
@@ -13651,14 +13739,14 @@ linux_fnos_menu() {
           echo -e "${gl_bufan}"
 	  echo "FnOS 命令"
           echo -e "${gl_bufan}------------------------${gl_bai}"
-          echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-          echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)"
+          echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+          echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)${gl_bai}"
           echo -e "${gl_bufan}------------------------${gl_bai}"
           echo -e "${gl_bufan}1.   ${gl_bai}Compose容器管理   ${gl_huang}★${gl_bai}"
 	  echo -e "${gl_bufan}------------------------"
-	  echo -e "${gl_bufan}2.   ${gl_bai}查看Docker全局状态 ${gl_huang}★${gl_bai}"
+	  echo -e "${gl_bufan}2.   ${gl_bai}Docker全局状态    ${gl_huang}★${gl_bai}"
 	  echo -e "${gl_bufan}------------------------"
-	  echo -e "${gl_bufan}3.   ${gl_bai}Docker容器管理 ${gl_huang}★${gl_bai}"
+	  echo -e "${gl_bufan}3.   ${gl_bai}Docker容器管理    ${gl_huang}★${gl_bai}"
 	  echo -e "${gl_bufan}4.   ${gl_bai}Docker镜像管理"
 	  echo -e "${gl_bufan}5.   ${gl_bai}Docker网络管理"
 	  echo -e "${gl_bufan}6.   ${gl_bai}Docker卷管理"
@@ -13669,8 +13757,8 @@ linux_fnos_menu() {
           echo -e "${gl_bufan}------------------------${gl_bai}"
 	  echo -e "${gl_bufan}0.   ${gl_bai}返回主菜单"
 	  echo -e "${gl_bufan}------------------------${gl_bai}"
-	  read -e -p "请输入你的选择: " sub_choice
 
+	  read -e -p "请输入你的选择: " sub_choice
 	  case $sub_choice in
 		  1)
                          send_stats "Compose容器管理"
@@ -13889,8 +13977,6 @@ linux_fnos_menu() {
 
 
 
-# 函数：管理 Nginx 配置文件（两列显示）
-
 # 函数：显示Nginx命令
 linux_nginx_menu() {
     while true; do
@@ -13898,8 +13984,8 @@ linux_nginx_menu() {
         echo -e ""
         echo -e "Nginx命令"
         echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)"
+        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)${gl_bai}"
         echo -e "${gl_bufan}------------------------${gl_bai}"
         echo -e "${gl_bufan}1.   ${gl_bai}停止Nginx"
         echo -e "${gl_bufan}2.   ${gl_bai}启动Nginx"
@@ -13918,10 +14004,7 @@ linux_nginx_menu() {
         echo -e "${gl_bufan}0.   ${gl_bai}返回主菜单"
         echo -e "${gl_bufan}------------------------${gl_bai}"
         
-        if ! safe_read_number "请输入选择" choice 0 9; then
-            continue
-        fi
-        
+        read -e -p "请输入你的选择: " choice
         case $choice in
             1)
                 # 停止Nginx
@@ -14015,6 +14098,11 @@ linux_nginx_menu() {
                 ;;
             9)
                 # 配置个人网站脚本
+                if [ ! -d "/etc/nginx/html" ]; then
+                    echo -e "${gl_huang}错误：目录 /etc/nginx/html 不存在。${gl_bai}"
+                    read -p "按任意键返回主菜单..."
+                    continue
+                fi
                 clear
                 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/nginx/create_nginx_conf.sh)
                 break_end
@@ -14043,8 +14131,8 @@ linux_git_menu() {
         echo -e "${gl_bufan}"
         echo -e "Git 脚本工具"
         echo -e "${gl_bufan}------------------------${gl_bai}"
-        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)"
+        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+        echo -e "${gl_bufan}内网 IP 地址: ${gl_huang}$(get_internal_ip)${gl_bai}"
         echo -e "${gl_bufan}------------------------${gl_bai}"
         echo -e "${gl_bufan}1.   ${gl_bai}推送更新"
         echo -e "${gl_bufan}2.   ${gl_bai}拉取更新"
@@ -14062,10 +14150,7 @@ linux_git_menu() {
         echo -e "${gl_bufan}0.   ${gl_bai}返回主菜单"
         echo -e "${gl_bufan}------------------------${gl_bai}"
         
-        if ! safe_read_number "请输入选择" choice 0 9; then
-            continue
-        fi
-        
+        read -e -p "请输入你的选择: " choice
         case $choice in
             1)
                 # 推送更新
@@ -14127,21 +14212,1710 @@ done
 
 
 
-# 函数_解压压缩
+
+
+
+
+
+
+
+
+
+# 安装回收站功能
+install_trash() {
+    local trash_cmd=""
+    
+    # 检测系统并设置相应的回收站命令
+    if command -v trash-put &> /dev/null; then
+        trash_cmd="trash-put"
+        echo -e "${gl_lv}检测到已安装 trash-cli 回收站工具${gl_bai}"
+    elif command -v gio &> /dev/null; then
+        trash_cmd="gio trash"
+        echo -e "${gl_lv}检测到已安装 gio 回收站工具${gl_bai}"
+    else
+        echo -e "${gl_huang}未找到回收站工具，正在尝试安装...${gl_bai}"
+        
+        # 根据不同的包管理器安装回收站工具
+        if command -v apt &> /dev/null; then
+            echo -e "${gl_lan}检测到 Debian/Ubuntu 系统，安装 trash-cli...${gl_bai}"
+            sudo apt update && sudo apt install -y trash-cli
+            if command -v trash-put &> /dev/null; then
+                trash_cmd="trash-put"
+            fi
+        elif command -v yum &> /dev/null; then
+            echo -e "${gl_lan}检测到 CentOS/RHEL 系统，安装 trash-cli...${gl_bai}"
+            sudo yum install -y trash-cli
+            if command -v trash-put &> /dev/null; then
+                trash_cmd="trash-put"
+            fi
+        elif command -v dnf &> /dev/null; then
+            echo -e "${gl_lan}检测到 Fedora 系统，安装 trash-cli...${gl_bai}"
+            sudo dnf install -y trash-cli
+            if command -v trash-put &> /dev/null; then
+                trash_cmd="trash-put"
+            fi
+        elif command -v pacman &> /dev/null; then
+            echo -e "${gl_lan}检测到 Arch Linux 系统，安装 trash-cli...${gl_bai}"
+            sudo pacman -S --noconfirm trash-cli
+            if command -v trash-put &> /dev/null; then
+                trash_cmd="trash-put"
+            fi
+        else
+            echo -e "${gl_hong}无法自动安装回收站工具，请手动安装 trash-cli${gl_bai}"
+            return 1
+        fi
+    fi
+    
+    # 设置全局变量供其他函数使用
+    if [[ -n "$trash_cmd" ]]; then
+        TRASH_CMD="$trash_cmd"
+        echo -e "${gl_lv}回收站功能已启用: $TRASH_CMD${gl_bai}"
+        return 0
+    else
+        echo -e "${gl_hong}回收站工具安装失败${gl_bai}"
+        return 1
+    fi
+}
+
+# 删除文件函数（使用回收站）
+delete_file_with_trash() {
+    local file="$1"
+    
+    # 检查文件名是否为空
+    if [[ -z "$file" ]]; then
+        echo -e "${gl_hong}错误：文件名参数为空${gl_bai}"
+        return 1
+    fi
+    
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo -e "${gl_huang}回收站未初始化，尝试自动安装...${gl_bai}"
+        install_trash || {
+            echo -e "${gl_hong}回收站安装失败，将使用直接删除${gl_bai}"
+            return 1
+        }
+    fi
+    
+    if [[ -e "$file" ]]; then
+        echo -e "${gl_lan}正在移动到回收站: $file${gl_bai}"
+        if eval "$TRASH_CMD \"$file\""; then
+            echo -e "${gl_lv}✓ 已移动到回收站: $file${gl_bai}"
+            return 0
+        else
+            echo -e "${gl_hong}✗ 移动到回收站失败: $file${gl_bai}"
+            return 1
+        fi
+    else
+        echo -e "${gl_huang}文件不存在: $file${gl_bai}"
+        return 1
+    fi
+}
+
+# 获取回收站内容列表
+get_trash_list() {
+    local trash_items=()
+    
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    if [[ "$TRASH_CMD" == "gio trash" ]]; then
+        local trash_dir="$HOME/.local/share/Trash"
+        if [[ -d "$trash_dir/files" ]]; then
+            local count=1
+            for item in "$trash_dir/files"/*; do
+                if [[ -e "$item" ]]; then
+                    local filename=$(basename "$item")
+                    local info_file="$trash_dir/info/${filename}.trashinfo"
+                    local original_path=""
+                    local deletion_date=""
+                    
+                    if [[ -f "$info_file" ]]; then
+                        original_path=$(grep "^Path=" "$info_file" | cut -d= -f2-)
+                        deletion_date=$(grep "^DeletionDate=" "$info_file" | cut -d= -f2-)
+                    fi
+                    
+                    trash_items+=("{\"index\":$count,\"name\":\"$filename\",\"original_path\":\"$original_path\",\"deletion_date\":\"$deletion_date\"}")
+                    ((count++))
+                fi
+            done
+        fi
+    elif [[ "$TRASH_CMD" == "trash-put" ]] && command -v trash-list &> /dev/null; then
+        local count=1
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                # 解析 trash-list 输出格式：YYYY-MM-DD HH:MM:SS /path/to/file
+                local deletion_date=$(echo "$line" | awk '{print $1 " " $2}')
+                local original_path=$(echo "$line" | awk '{$1=$2=""; print substr($0,3)}' | sed 's/^ *//')
+                local filename=$(basename "$original_path")
+                
+                trash_items+=("{\"index\":$count,\"name\":\"$filename\",\"original_path\":\"$original_path\",\"deletion_date\":\"$deletion_date\"}")
+                ((count++))
+            fi
+        done < <(trash-list 2>/dev/null)
+    fi
+    
+    # 输出JSON格式的列表
+    if [[ ${#trash_items[@]} -eq 0 ]]; then
+        echo "[]"
+    else
+        echo "[$(IFS=,; echo "${trash_items[*]}")]"
+    fi
+}
+
+# 显示回收站内容和统计信息
+show_trash_contents_and_stats() {
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo -e "${gl_huang}回收站未启用${gl_bai}"
+        return
+    fi
+    
+    local trash_json=$(get_trash_list)
+    local item_count=0
+    
+    # 计算项目数量
+    if command -v jq &> /dev/null; then
+        item_count=$(echo "$trash_json" | jq length)
+    else
+        # 如果没有jq，手动计算
+        item_count=$(echo "$trash_json" | grep -o '"index"' | wc -l)
+    fi
+    
+    if [[ $item_count -eq 0 ]]; then
+        echo -e "${gl_huang}回收站为空${gl_bai}"
+        return
+    fi
+    
+    # 显示回收站内容（横向排列）
+    echo -e "${gl_bufan}回收站中的文件:${gl_bai}"
+    echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+    echo
+
+    # 收集所有文件名
+    local files=()
+    if command -v jq &> /dev/null; then
+        while IFS= read -r line; do
+            files+=("$line")
+        done < <(echo "$trash_json" | jq -r '.[] | "\(.index). \(.name)"')
+    else
+        # 如果没有jq，使用其他方法
+        local index=1
+        if [[ "$TRASH_CMD" == "gio trash" ]]; then
+            local trash_dir="$HOME/.local/share/Trash/files"
+            for item in "$trash_dir"/*; do
+                if [[ -e "$item" ]]; then
+                    local filename=$(basename "$item")
+                    files+=("$index. $filename")
+                    ((index++))
+                fi
+            done
+        elif [[ "$TRASH_CMD" == "trash-put" ]] && command -v trash-list &> /dev/null; then
+            while IFS= read -r line; do
+                if [[ -n "$line" ]]; then
+                    local filename=$(echo "$line" | awk '{$1=$2=""; print substr($0,3)}' | sed 's/^ *//' | xargs basename)
+                    files+=("$index. $filename")
+                    ((index++))
+                fi
+            done < <(trash-list)
+        fi
+    fi
+    
+    # 横向排列显示
+    local count=0
+    local items_per_line=4  # 每行显示4个项目
+    local max_length=0
+    
+    # 计算最长项目名的长度，用于对齐
+    for file in "${files[@]}"; do
+        local len=${#file}
+        if [ $len -gt $max_length ]; then
+            max_length=$len
+        fi
+    done
+    
+    max_length=$((max_length + 4))  # 增加一些间距
+    
+    for i in "${!files[@]}"; do
+        count=$((count + 1))
+        # 使用黄色显示序号，白色显示文件名
+        printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$count" "${files[i]#*. }"
+        
+        # 每行显示指定数量的项目后换行
+        if [ $((count % items_per_line)) -eq 0 ]; then
+            echo ""
+        fi
+    done
+    
+    # 如果最后一行不满，确保换行
+    if [ $((count % items_per_line)) -ne 0 ]; then
+        echo ""
+    fi
+
+    echo
+    echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+    
+    # 显示统计信息
+    echo -e "${gl_bufan}统计信息:${gl_bai}"
+    
+    if [[ "$TRASH_CMD" == "gio trash" ]]; then
+        local trash_dir="$HOME/.local/share/Trash/files"
+        if [[ -d "$trash_dir" ]]; then
+            local file_count=$(find "$trash_dir" -type f | wc -l)
+            local dir_count=$(find "$trash_dir" -type d | wc -l)
+            local total_size=$(du -sh "$trash_dir" 2>/dev/null | cut -f1)
+            
+            echo -e "  ${gl_bufan}文件数量:${gl_bai} ${gl_huang}$file_count${gl_bai}"
+            echo -e "  ${gl_bufan}目录数量:${gl_bai} ${gl_huang}$((dir_count - 1))${gl_bai}"
+            echo -e "  ${gl_bufan}总大小:${gl_bai} ${gl_huang}$total_size${gl_bai}"
+        fi
+    elif [[ "$TRASH_CMD" == "trash-put" ]]; then
+        if command -v trash-list &> /dev/null; then
+            local file_count=$(trash-list | wc -l)
+            echo -e "  ${gl_bufan}文件数量:${gl_bai} ${gl_huang}$file_count${gl_bai}"
+        fi
+    fi
+}
+# 启用回收站
+enable_trash() {
+    echo
+    echo -e "${gl_zi}=== 启用回收站 ===${gl_bai}"
+    
+    if [[ -n "$TRASH_CMD" ]]; then
+        echo -e "${gl_lv}回收站已经启用${gl_bai}"
+        echo -e "${gl_lv}当前回收站工具: $TRASH_CMD${gl_bai}"
+    else
+        if install_trash; then
+            echo -e "${gl_lv}回收站启用成功${gl_bai}"
+        else
+            echo -e "${gl_hong}回收站启用失败${gl_bai}"
+        fi
+    fi
+
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 关闭回收站
+disable_trash() {
+    echo
+    echo -e "${gl_zi}=== 关闭回收站 ===${gl_bai}"
+    
+    if [[ -n "$TRASH_CMD" ]]; then
+        unset TRASH_CMD
+        echo -e "${gl_lv}回收站已关闭${gl_bai}"
+        echo -e "${gl_huang}现在删除文件将直接永久删除，请谨慎操作！${gl_bai}"
+    else
+        echo -e "${gl_huang}回收站已经是关闭状态${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 清空回收站
+empty_trash() {
+    echo
+    echo -e "${gl_zi}=== 清空回收站 ===${gl_bai}"
+    
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo -e "${gl_hong}回收站未启用${gl_bai}"
+        echo
+        echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+        read -n1 -s
+        return
+    fi
+    
+    read -p "确认要永久清空回收站中的所有内容? [y/N] " -n1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${gl_huang}已取消清空操作${gl_bai}"
+        return
+    fi
+    
+    if [[ "$TRASH_CMD" == "gio trash" ]]; then
+        local trash_dir="$HOME/.local/share/Trash"
+        if [[ -d "$trash_dir" ]]; then
+            rm -rf "$trash_dir/files/"* 2>/dev/null
+            rm -rf "$trash_dir/info/"* 2>/dev/null
+            echo -e "${gl_lv}回收站已清空${gl_bai}"
+        else
+            echo -e "${gl_huang}回收站目录不存在${gl_bai}"
+        fi
+    elif [[ "$TRASH_CMD" == "trash-put" ]]; then
+        if command -v trash-empty &> /dev/null; then
+            trash-empty
+            echo -e "${gl_lv}回收站已清空${gl_bai}"
+        else
+            echo -e "${gl_hong}trash-empty 命令不可用${gl_bai}"
+        fi
+    else
+        echo -e "${gl_hong}不支持的回收站工具: $TRASH_CMD${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 交互式恢复回收站文件
+restore_trash_interactive() {
+    echo
+    echo -e "${gl_zi}=== 恢复回收站文件 ===${gl_bai}"
+    
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo -e "${gl_hong}回收站未启用${gl_bai}"
+        echo
+        echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+        read -n1 -s
+        return
+    fi
+    
+    # 获取回收站内容
+    local trash_json=$(get_trash_list)
+    local item_count=0
+    
+    # 计算项目数量
+    if command -v jq &> /dev/null; then
+        item_count=$(echo "$trash_json" | jq length)
+    else
+        item_count=$(echo "$trash_json" | grep -o '"index"' | wc -l)
+    fi
+    
+    if [[ $item_count -eq 0 ]]; then
+        echo -e "${gl_huang}回收站为空，没有文件可恢复${gl_bai}"
+        echo
+        echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+        read -n1 -s
+        return
+    fi
+    
+    # 显示可恢复的文件列表
+    echo -e "${gl_bufan}可恢复的文件:${gl_bai}"
+    echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+    
+    if command -v jq &> /dev/null; then
+        echo "$trash_json" | jq -r '.[] | "\(.index). \(.name)"' | while read -r line; do
+            local index=$(echo "$line" | cut -d. -f1)
+            local filename=$(echo "$line" | cut -d. -f2- | sed 's/^ *//')
+            echo -e "  ${gl_huang}$index.${gl_bai} $filename"
+        done
+    else
+        local index=1
+        if [[ "$TRASH_CMD" == "gio trash" ]]; then
+            local trash_dir="$HOME/.local/share/Trash/files"
+            for item in "$trash_dir"/*; do
+                if [[ -e "$item" ]]; then
+                    local filename=$(basename "$item")
+                    echo -e "  ${gl_huang}$index.${gl_bai} $filename"
+                    ((index++))
+                fi
+            done
+        elif [[ "$TRASH_CMD" == "trash-put" ]] && command -v trash-list &> /dev/null; then
+            trash-list | while read -r line; do
+                if [[ -n "$line" ]]; then
+                    local filename=$(echo "$line" | awk '{$1=$2=""; print substr($0,3)}' | sed 's/^ *//' | xargs basename)
+                    echo -e "  ${gl_huang}$index.${gl_bai} $filename"
+                    ((index++))
+                fi
+            done
+        fi
+    fi
+    
+    echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+    echo -e "${gl_huang}提示：可输入多个序号，用空格分隔；0 或留空取消${gl_bai}"
+    
+    # 获取用户输入（支持回退）
+    echo -ne "${gl_bufan}请输入要恢复的文件序号: ${gl_bai}"
+    read -e raw
+    [[ -z "$raw" || "$raw" == "0" ]] && return
+    
+    # 解析用户输入
+    local to_restore=()
+    read -ra tokens <<< "$raw"
+    
+    for tok in "${tokens[@]}"; do
+        [[ -z "$tok" ]] && continue
+        
+        if [[ $tok =~ ^[0-9]+$ ]] && (( tok>=1 && tok<=item_count )); then
+            to_restore+=("$tok")
+        else
+            echo -e "${gl_hong}跳过无效序号: $tok${gl_bai}"
+        fi
+    done
+
+    ((${#to_restore[@]}==0)) && {
+        echo -e "${gl_huang}没有选择有效的文件，按任意键继续...${gl_bai}"
+        read -n1 -s
+        return
+    }
+
+    # 二次确认
+    echo
+    echo -e "${gl_hong}即将恢复以下 ${#to_restore[@]} 个文件：${gl_bai}"
+    for index in "${to_restore[@]}"; do
+        if command -v jq &> /dev/null; then
+            local filename=$(echo "$trash_json" | jq -r ".[] | select(.index==$index) | .name")
+            echo -e "  ${gl_huang}$index. $filename${gl_bai}"
+        else
+            echo -e "  ${gl_huang}$index. 文件${gl_bai}"
+        fi
+    done
+    
+    read -p "确认恢复这些文件? [y/N] " -n1 -r
+    echo
+    [[ $REPLY =~ ^[Yy]$ ]] || return
+
+    # 执行恢复
+    local ok=0 fail=0
+    for index in "${to_restore[@]}"; do
+        if restore_single_file "$index"; then
+            ((ok++))
+        else
+            ((fail++))
+        fi
+    done
+    
+    echo
+    if ((ok > 0)); then
+        echo -e "${gl_lv}✓ 成功恢复 $ok 个文件${gl_bai}"
+    fi
+    if ((fail > 0)); then
+        echo -e "${gl_hong}✗ $fail 个文件恢复失败${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 恢复单个文件
+restore_single_file() {
+    local index="$1"
+    
+    if [[ "$TRASH_CMD" == "gio trash" ]]; then
+        local trash_dir="$HOME/.local/share/Trash"
+        local files_dir="$trash_dir/files"
+        local info_dir="$trash_dir/info"
+        
+        # 获取文件名
+        local filename=""
+        local count=1
+        for item in "$files_dir"/*; do
+            if [[ -e "$item" ]]; then
+                if [[ $count -eq $index ]]; then
+                    filename=$(basename "$item")
+                    break
+                fi
+                ((count++))
+            fi
+        done
+        
+        if [[ -z "$filename" ]]; then
+            echo -e "${gl_hong}无法找到文件: 序号 $index${gl_bai}"
+            return 1
+        fi
+        
+        local file_path="$files_dir/$filename"
+        local info_file="$info_dir/${filename}.trashinfo"
+        local original_path=""
+        
+        if [[ -f "$info_file" ]]; then
+            original_path=$(grep "^Path=" "$info_file" | cut -d= -f2-)
+        fi
+        
+        if [[ -n "$original_path" && -e "$file_path" ]]; then
+            # 确保目标目录存在
+            local target_dir=$(dirname "$original_path")
+            mkdir -p "$target_dir"
+            
+            # 移动文件回原位置
+            if mv "$file_path" "$original_path" 2>/dev/null; then
+                # 删除.trashinfo文件
+                rm -f "$info_file"
+                echo -e "${gl_lv}✓ 已恢复: $filename${gl_bai}"
+                return 0
+            else
+                echo -e "${gl_hong}✗ 恢复失败: $filename${gl_bai}"
+                return 1
+            fi
+        else
+            echo -e "${gl_hong}✗ 文件信息不完整: $filename${gl_bai}"
+            return 1
+        fi
+        
+    elif [[ "$TRASH_CMD" == "trash-put" ]]; then
+        if command -v trash-restore &> /dev/null; then
+            # 使用trash-restore命令恢复特定文件
+            echo -e "${gl_huang}请手动在接下来的界面中选择要恢复的文件...${gl_bai}"
+            trash-restore
+            return $?
+        else
+            echo -e "${gl_hong}trash-restore 命令不可用${gl_bai}"
+            return 1
+        fi
+    else
+        echo -e "${gl_hong}不支持的回收站工具${gl_bai}"
+        return 1
+    fi
+}
+
+# 刷新回收站状态
+refresh_trash() {
+    echo
+    echo -e "${gl_zi}=== 刷新回收站状态 ===${gl_bai}"
+    
+    unset TRASH_CMD
+    if install_trash; then
+        echo -e "${gl_lv}回收站状态已刷新${gl_bai}"
+        echo -e "${gl_lv}当前回收站工具: $TRASH_CMD${gl_bai}"
+    else
+        echo -e "${gl_hong}回收站功能不可用${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 测试回收站功能
+test_trash_function() {
+    echo
+    echo -e "${gl_zi}=== 测试回收站功能 ===${gl_bai}"
+    
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo -e "${gl_hong}回收站未启用${gl_bai}"
+        echo
+        echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+        read -n1 -s
+        return
+    fi
+    
+    local test_file=".trash_test_$(date +%s)"
+    echo -e "${gl_huang}创建测试文件: $test_file${gl_bai}"
+    touch "$test_file"
+    
+    if [[ -e "$test_file" ]]; then
+        echo -e "${gl_lv}测试文件创建成功${gl_bai}"
+        echo -e "${gl_huang}尝试移动到回收站...${gl_bai}"
+        
+        if delete_file_with_trash "$test_file"; then
+            echo -e "${gl_lv}测试成功：文件已移动到回收站${gl_bai}"
+        else
+            echo -e "${gl_hong}测试失败：文件未能移动到回收站${gl_bai}"
+        fi
+    else
+        echo -e "${gl_hong}测试文件创建失败${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 配置rm命令重定向到回收站
+setup_rm_redirect() {
+    echo
+    echo -e "${gl_zi}=== 配置 rm 命令重定向到回收站 ===${gl_bai}"
+    
+    if [[ -z "$TRASH_CMD" ]]; then
+        echo -e "${gl_hong}回收站未启用，请先启用回收站${gl_bai}"
+        echo
+        echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+        read -n1 -s
+        return
+    fi
+    
+    echo -e "${gl_huang}此功能将创建一个别名，将 rm 命令重定向到回收站${gl_bai}"
+    echo -e "${gl_huang}这样使用 rm 删除的文件也会进入回收站${gl_bai}"
+    echo
+    echo -e "${gl_hong}警告：这可能会影响系统脚本和其他应用程序的行为${gl_bai}"
+    echo -e "${gl_huang}建议仅在交互式shell中使用此功能${gl_bai}"
+    echo
+    
+    read -p "确认配置 rm 命令重定向? [y/N] " -n1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${gl_huang}已取消配置${gl_bai}"
+        return
+    fi
+    
+    # 检测用户的shell
+    local user_shell=$(basename "$SHELL")
+    local config_file=""
+    
+    case "$user_shell" in
+        bash)
+            config_file="$HOME/.bashrc"
+            ;;
+        zsh)
+            config_file="$HOME/.zshrc"
+            ;;
+        *)
+            echo -e "${gl_hong}不支持的shell: $user_shell${gl_bai}"
+            echo -e "${gl_huang}请手动在您的shell配置文件中添加以下别名:${gl_bai}"
+            echo "alias rm='$TRASH_CMD'"
+            echo
+            echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+            read -n1 -s
+            return
+            ;;
+    esac
+    
+    # 检查是否已经配置
+    if grep -q "alias rm=" "$config_file" 2>/dev/null; then
+        echo -e "${gl_huang}检测到已存在 rm 别名配置${gl_bai}"
+        echo -e "${gl_huang}当前配置: $(grep "alias rm=" "$config_file")${gl_bai}"
+        
+        read -p "是否覆盖现有配置? [y/N] " -n1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${gl_huang}已取消配置${gl_bai}"
+            return
+        fi
+        
+        # 删除现有的rm别名
+        sed -i '/alias rm=/d' "$config_file"
+    fi
+    
+    # 添加新的rm别名
+    echo "alias rm='$TRASH_CMD'" >> "$config_file"
+    
+    if [[ $? -eq 0 ]]; then
+        echo -e "${gl_lv}✓ 已成功配置 rm 命令重定向${gl_bai}"
+        echo -e "${gl_huang}配置已添加到: $config_file${gl_bai}"
+        echo -e "${gl_huang}请重新登录或运行: source $config_file${gl_bai}"
+        echo
+        echo -e "${gl_lv}现在使用 rm 命令删除的文件将进入回收站${gl_bai}"
+    else
+        echo -e "${gl_hong}✗ 配置失败${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 移除rm命令重定向
+remove_rm_redirect() {
+    echo
+    echo -e "${gl_zi}=== 移除 rm 命令重定向 ===${gl_bai}"
+    
+    # 检测用户的shell
+    local user_shell=$(basename "$SHELL")
+    local config_file=""
+    
+    case "$user_shell" in
+        bash)
+            config_file="$HOME/.bashrc"
+            ;;
+        zsh)
+            config_file="$HOME/.zshrc"
+            ;;
+        *)
+            echo -e "${gl_hong}不支持的shell: $user_shell${gl_bai}"
+            echo -e "${gl_huang}请手动从您的shell配置文件中移除 rm 别名${gl_bai}"
+            echo
+            echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+            read -n1 -s
+            return
+            ;;
+    esac
+    
+    # 检查是否已经配置
+    if grep -q "alias rm=" "$config_file" 2>/dev/null; then
+        echo -e "${gl_huang}检测到 rm 别名配置: $(grep "alias rm=" "$config_file")${gl_bai}"
+        
+        read -p "确认移除 rm 命令重定向? [y/N] " -n1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${gl_huang}已取消操作${gl_bai}"
+            return
+        fi
+        
+        # 删除现有的rm别名
+        sed -i '/alias rm=/d' "$config_file"
+        
+        if [[ $? -eq 0 ]]; then
+            echo -e "${gl_lv}✓ 已成功移除 rm 命令重定向${gl_bai}"
+            echo -e "${gl_huang}请重新登录或运行: source $config_file${gl_bai}"
+            echo
+            echo -e "${gl_lv}现在 rm 命令将恢复为系统默认行为${gl_bai}"
+        else
+            echo -e "${gl_hong}✗ 移除失败${gl_bai}"
+        fi
+    else
+        echo -e "${gl_huang}未找到 rm 命令重定向配置${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 检查rm命令重定向状态
+check_rm_redirect() {
+    echo
+    echo -e "${gl_zi}=== rm 命令重定向状态 ===${gl_bai}"
+    
+    # 检测用户的shell
+    local user_shell=$(basename "$SHELL")
+    local config_file=""
+    
+    case "$user_shell" in
+        bash)
+            config_file="$HOME/.bashrc"
+            ;;
+        zsh)
+            config_file="$HOME/.zshrc"
+            ;;
+        *)
+            echo -e "${gl_hong}不支持的shell: $user_shell${gl_bai}"
+            return
+            ;;
+    esac
+    
+    # 检查是否已经配置
+    if grep -q "alias rm=" "$config_file" 2>/dev/null; then
+        echo -e "${gl_lv}✓ rm 命令重定向已启用${gl_bai}"
+        echo -e "${gl_huang}当前配置: $(grep "alias rm=" "$config_file")${gl_bai}"
+        echo
+        echo -e "${gl_lv}使用 rm 命令删除的文件将进入回收站${gl_bai}"
+    else
+        echo -e "${gl_huang}✗ rm 命令重定向未启用${gl_bai}"
+        echo
+        echo -e "${gl_huang}使用 rm 命令删除的文件将永久删除${gl_bai}"
+        echo -e "${gl_huang}不会进入回收站${gl_bai}"
+    fi
+    
+    echo
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 静默检查rm重定向状态
+check_rm_redirect_silent() {
+    local user_shell=$(basename "$SHELL")
+    local config_file=""
+    
+    case "$user_shell" in
+        bash)
+            config_file="$HOME/.bashrc"
+            ;;
+        zsh)
+            config_file="$HOME/.zshrc"
+            ;;
+        *)
+            return
+            ;;
+    esac
+    
+    if grep -q "alias rm=" "$config_file" 2>/dev/null; then
+        echo -e "${gl_lv}rm 重定向: 已启用${gl_bai}"
+    else
+        echo -e "${gl_huang}rm 重定向: 未启用${gl_bai}"
+    fi
+}
+
+# 回收站管理菜单
+manage_trash_menu() {
+    # 确保TRASH_CMD变量存在
+    if [[ -z "$TRASH_CMD" ]]; then
+        # 尝试初始化回收站
+        install_trash > /dev/null 2>&1
+    fi
+    
+    while true; do
+        clear
+        echo -e "${gl_zi}>>> 回收站管理${gl_bai}"
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+
+        # 显示回收站状态
+        if [[ -n "$TRASH_CMD" ]]; then
+            echo -e "${gl_lv}回收站状态: 已启用 ($TRASH_CMD)${gl_bai}"
+        else
+            echo -e "${gl_hong}回收站状态: 未启用${gl_bai}"
+        fi
+        
+        # 显示rm重定向状态
+        check_rm_redirect_silent
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+
+        # 默认显示回收站内容和统计信息
+        show_trash_contents_and_stats
+
+        
+        # 显示菜单选项
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_bufan}1.   ${gl_bai} 关闭回收站"
+        echo -e "${gl_bufan}2.   ${gl_bai} 开启回收站"
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_bufan}3.   ${gl_bai} 清空回收站"
+        echo -e "${gl_bufan}4.   ${gl_bai} 恢复回收站"
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_bufan}5.   ${gl_bai} 刷新回收站"
+        echo -e "${gl_bufan}6.   ${gl_bai} 测试回收站"
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_bufan}7.   ${gl_bai} 配置rm重定向"
+        echo -e "${gl_bufan}8.   ${gl_bai} 移除rm重定向"
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_bufan}0.   ${gl_bai} 返回主菜单"
+	echo -e "${gl_bufan}------------------------${gl_bai}"
+	  read -e -p "请输入你的选择: " sub_choice
+	  case $sub_choice in
+            1)
+                disable_trash
+                ;;
+            2)
+                enable_trash
+                ;;
+            3)
+                empty_trash
+                ;;
+            4)
+                restore_trash_interactive
+                ;;
+            5)
+                refresh_trash
+                ;;
+            6)
+                test_trash_function
+                ;;
+            7)
+                setup_rm_redirect
+                ;;
+            8)
+                remove_rm_redirect
+                ;;
+            0)
+                return
+                ;;
+        esac
+    done
+}
+
+
+
+
+
+
+
+
+
+
+# 交互式删除函数
+interactive_delete(){
+    # 尝试初始化回收站
+    if [[ -z "$TRASH_CMD" ]]; then
+        install_trash
+    fi
+    
+    while true; do
+        clear
+        echo -e "${gl_zi}>>> 删除模式${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        # 显示当前使用的删除方式
+        if [[ -n "$TRASH_CMD" ]]; then
+            echo -e "${gl_lv}使用回收站删除（安全模式）${gl_bai}"
+        else
+            echo -e "${gl_huang}使用直接删除（请谨慎操作）${gl_bai}"
+        fi
+
+        # ---- 生成文件/目录列表 ----
+        local list=()
+        while IFS= read -r -d '' item; do
+            list+=("$item")
+        done < <(
+            find . -maxdepth 1 -type f -printf '%P\0' 2>/dev/null
+            find . -maxdepth 1 -type d ! -name '.' -printf '%P\0' 2>/dev/null
+        )
+
+        if ((${#list[@]}==0)); then
+            echo -e "${gl_huang}(当前目录无文件或目录)${gl_bai}"
+            echo -e "${gl_bufan}按任意键返回主菜单...${gl_bai}"; read -n1 -s
+            return
+        fi
+
+        # ---- 横向排版显示 ----
+        echo -e "${gl_bufan}当前目录下的文件/目录：${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        local count=0 items_per_line=4 max_length=0
+        for item in "${list[@]}"; do 
+            (( ${#item} > max_length )) && max_length=${#item}
+        done
+        max_length=$((max_length+4))
+        for i in "${!list[@]}"; do
+            count=$((count+1))
+            printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$((i+1))" "${list[i]}"
+            (( count % items_per_line == 0 )) && echo
+        done
+        (( count % items_per_line )) && echo
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+
+        if [[ -n "$TRASH_CMD" ]]; then
+            echo -e "${gl_lv}安全模式：文件将移动到回收站，可恢复${gl_bai}"
+        else
+            echo -e "${gl_hong}警告：删除操作不可恢复，请谨慎操作！${gl_bai}"
+        fi
+        echo -e "${gl_huang}提示：多个序号或文件名，用空格分隔；0 或留空返回主菜单${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+
+        local raw
+        read -p "请输入（多选用空格分隔）: " -e raw
+        [[ -z $raw || $raw == "0" ]] && return
+
+        # ---- 解析用户输入 ----
+        local to_del=() tok idx
+        # 使用数组来存储输入，正确处理带空格的参数
+        read -ra tokens <<< "$raw"
+        
+        for tok in "${tokens[@]}"; do
+            # 跳过空令牌
+            [[ -z "$tok" ]] && continue
+            
+            if [[ $tok =~ ^[0-9]+$ ]] && (( tok>=1 && tok<=${#list[@]} )); then
+                local selected_item="${list[$((tok-1))]}"
+                # 检查项目是否仍然存在
+                if [[ -e "$selected_item" ]]; then
+                    to_del+=("$selected_item")
+                else
+                    echo -e "${gl_hong}文件不存在，跳过: $selected_item${gl_bai}"
+                fi
+            elif [[ -e "$tok" ]]; then
+                to_del+=("$tok")
+            else
+                echo -e "${gl_hong}跳过无效输入或文件不存在: $tok${gl_bai}"
+            fi
+        done
+
+        ((${#to_del[@]}==0)) && {
+            echo -e "${gl_huang}没有有效的文件可删除，按任意键继续...${gl_bai}"
+            read -n1 -s
+            continue
+        }
+
+        # ---- 二次确认 ----
+        echo
+        echo -e "${gl_hong}即将删除以下 ${#to_del[@]} 项：${gl_bai}"
+        for item in "${to_del[@]}"; do
+            echo -e "  ${gl_huang}$item${gl_bai}"
+        done
+        echo
+        
+        if [[ -n "$TRASH_CMD" ]]; then
+            read -p "确认移动到回收站? [y/N] " -n1 -r
+        else
+            read -p "确认永久删除? [y/N] " -n1 -r
+        fi
+        echo
+        [[ $REPLY =~ ^[Yy]$ ]] || continue
+
+        # ---- 执行删除 ----
+        local ok=0 fail=0
+        for item in "${to_del[@]}"; do
+            if [[ -n "$TRASH_CMD" ]]; then
+                if delete_file_with_trash "$item"; then
+                    ((ok++))
+                else
+                    ((fail++))
+                fi
+            else
+                # 如果没有回收站，使用原来的删除逻辑
+                if delete_file_with_trash "$item"; then
+                    ((ok++))
+                else
+                    ((fail++))
+                fi
+            fi
+        done
+        
+        echo
+        if [[ -n "$TRASH_CMD" ]]; then
+            if ((ok > 0)); then
+                echo -e "${gl_lv}✓ 成功移动 $ok 项到回收站${gl_bai}"
+            fi
+            if ((fail > 0)); then
+                echo -e "${gl_hong}✗ $fail 项移动失败${gl_bai}"
+            fi
+        else
+            if ((ok > 0)); then
+                echo -e "${gl_lv}✓ 成功删除 $ok 项${gl_bai}"
+            fi
+            if ((fail > 0)); then
+                echo -e "${gl_hong}✗ $fail 项删除失败${gl_bai}"
+            fi
+        fi
+        
+        echo -e "${gl_bufan}按任意键刷新目录...${gl_bai}"
+        read -n1 -s
+    done
+}
+
+
+
+
+# 交互式压缩 - 横向排列
+interactive_compress() {
+    clear
+    echo -e "${gl_zi}>>> 压缩模式${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+    local list=() item i choice target fmt_idx format
+
+    # 使用更简单的方法获取文件和目录列表
+    for item in *; do
+        # 排除隐藏文件、目录和压缩文件
+        if [[ "$item" != .* && -e "$item" ]]; then
+            # 排除常见的压缩格式
+            if [[ ! "$item" =~ \.(zip|7z|tar|tar\.gz|tar\.bz2|tar\.xz|tgz|tbz2|txz|rar|gz|bz2|xz)$ ]]; then
+                list+=("$item")
+            fi
+        fi
+    done
+
+    # 添加子目录（非隐藏）
+    for item in */; do
+        if [[ -d "$item" && "$item" != .*/ && "$item" != "./" ]]; then
+            # 去掉末尾的斜杠
+            item="${item%/}"
+            list+=("$item")
+        fi
+    done
+
+    # 按字母顺序排序
+    IFS=$'\n' list=($(sort <<<"${list[*]}"))
+    unset IFS
+
+    if ((${#list[@]}==0)); then
+        echo -e "${gl_huang}(当前目录无可压缩的文件/目录)${gl_bai}"
+        echo -e "${gl_bufan}按任意键返回...${gl_bai}"
+        read -n1 -s
+        return
+    else
+        echo -e "${gl_bufan}当前目录下的文件/目录：${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+
+        # 横向排列显示
+        local count=0
+        local items_per_line=4  # 每行显示4个项目
+        local max_length=0
+
+        # 计算最长项目名的长度，用于对齐
+        for item in "${list[@]}"; do
+            local len=${#item}
+            if [ $len -gt $max_length ]; then
+                max_length=$len
+            fi
+        done
+
+        max_length=$((max_length + 4))  # 增加一些间距
+
+        for i in "${!list[@]}"; do
+            count=$((count + 1))
+            # 使用黄色显示序号，白色显示项目名
+            printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$count" "${list[i]}"
+
+            # 每行显示指定数量的项目后换行
+            if [ $((count % items_per_line)) -eq 0 ]; then
+                echo ""
+            fi
+        done
+
+        # 如果最后一行不满，确保换行
+        if [ $((count % items_per_line)) -ne 0 ]; then
+            echo ""
+        fi
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+    fi
+
+    echo -e "${gl_huang}提示：可以使用 Tab 键补全文件/目录名，方向键回退编辑${gl_bai}"
+    read_with_completion "请输入序号选择，或手动输入文件名/目录名（留空取消）: " choice "file"
+
+    [[ -z "$choice" ]] && { echo -e "${gl_huang}已取消${gl_bai}"; return; }
+
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice>=1 && choice<=${#list[@]} )); then
+        target="${list[$((choice-1))]}"
+    else
+        target="$choice"
+    fi
+
+    [[ -e "$target" ]] || { echo -e "${gl_hong}错误：'$target' 不存在！${gl_bai}"; return; }
+
+    echo -e "${gl_huang}请选择压缩格式：${gl_bai}"
+    # 横向排列显示格式选项
+    echo -e "${gl_huang}1.${gl_bai} zip        ${gl_huang}2.${gl_bai} 7z         ${gl_huang}3.${gl_bai} tar.gz"
+    echo -e "${gl_huang}4.${gl_bai} tar.xz     ${gl_huang}5.${gl_bai} tar.bz2    ${gl_huang}6.${gl_bai} tar"
+    safe_read "输入序号 [1-6]: " fmt_idx "number"
+
+    case "$fmt_idx" in
+        1) format="zip" ;;
+        2) format="7z" ;;
+        3) format="tar.gz" ;;
+        4) format="tar.xz" ;;
+        5) format="tar.bz2" ;;
+        6) format="tar" ;;
+        *) echo -e "${gl_hong}无效序号！${gl_bai}"; return ;;
+    esac
+
+    # 调用独立的压缩函数
+    compress_file "$target" "$format" "."
+}
+
+
+
+
+
+
+# 增强的读取函数，支持 Tab 补全
+read_with_completion() {
+    local prompt="$1"
+    local var_name="$2"
+    local completion_type="$3"  # file, directory, format
+    
+    # 保存当前设置
+    local original_inputrc="$INPUTRC"
+    export INPUTRC=/dev/null  # 禁用系统 inputrc 以获得一致行为
+    
+    case "$completion_type" in
+        file)
+            # 文件补全
+            read -e -p "$prompt" -i "" "$var_name"
+            ;;
+        directory)
+            # 目录补全
+            read -e -p "$prompt" -i "" "$var_name"
+            ;;
+        format)
+            # 格式补全
+            read -e -p "$prompt" -i "" "$var_name"
+            ;;
+        *)
+            # 普通读取
+            read -p "$prompt" "$var_name"
+            ;;
+    esac
+    
+    # 恢复原始设置
+    export INPUTRC="$original_inputrc"
+}
+
+# 压缩文件 - 独立函数
+compress_file() {
+    # 进入函数时显示当前目录的所有文件
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_huang}当前目录下的所有文件：${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    # 使用 -A 参数显示所有文件（包括隐藏文件，但不包括 . 和 ..）
+    ls -A
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    
+    local target="$1" format="$2" output_dir="${3:-.}"
+    
+    [[ -e "$target" ]] || {
+        echo -e "${gl_hong}错误：'$target' 不存在！${gl_bai}"
+        return 1
+    }
+    
+    local ext="" cmd=() base_name output_file
+    base_name=$(basename "$target")
+    
+    case "$format" in
+        zip)
+            ext="zip"; cmd=("zip" "-r" "-q")
+            command -v zip &> /dev/null || {
+                echo -e "${gl_hong}错误：zip 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        7z)
+            ext="7z"; cmd=("7z" "a")
+            command -v 7z &> /dev/null || {
+                echo -e "${gl_hong}错误：7z 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        tar.gz|tgz)
+            ext="tar.gz"; cmd=("tar" "-zcf")
+            command -v tar &> /dev/null || {
+                echo -e "${gl_hong}错误：tar 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        tar.xz|txz)
+            ext="tar.xz"; cmd=("tar" "-Jcf")
+            command -v tar &> /dev/null || command -v xz &> /dev/null || {
+                echo -e "${gl_hong}错误：tar 或 xz 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        tar.bz2|tbz2)
+            ext="tar.bz2"; cmd=("tar" "-jcf")
+            command -v tar &> /dev/null || command -v bzip2 &> /dev/null || {
+                echo -e "${gl_hong}错误：tar 或 bzip2 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        tar)
+            ext="tar"; cmd=("tar" "-cf")
+            command -v tar &> /dev/null || {
+                echo -e "${gl_hong}错误：tar 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        *)
+            echo -e "${gl_hong}不支持的压缩格式：$format${gl_bai}"
+            echo -e "${gl_huang}支持的格式：zip, 7z, tar.gz, tar.xz, tar.bz2, tar${gl_bai}"
+            return 1
+            ;;
+    esac
+    
+    output_file="$output_dir/${base_name%%/}.${ext}"
+    echo -e "${gl_lv}正在压缩：$target → $output_file${gl_bai}"
+    
+    case "$format" in
+        zip|7z) "${cmd[@]}" "$output_file" "$target" ;;
+        *) "${cmd[@]}" "$output_file" -C "$(dirname "$target")" "$(basename "$target")" ;;
+    esac
+    
+    if [[ $? -eq 0 ]]; then
+        echo -e "${gl_lv}压缩完成：$output_file${gl_bai}"
+        
+        # 显示压缩后的文件信息
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_huang}压缩文件信息：${gl_bai}"
+        ls -lh "$output_file" 2>/dev/null || {
+            echo -e "${gl_huang}文件位置：$output_file${gl_bai}"
+        }
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        
+        # 等待用户确认返回
+        echo -e "${gl_bufan}按任意键返回压缩目录...${gl_bai}"
+        read -n1 -s
+        
+        # 返回压缩目录并重新调用压缩界面
+        cd "$(dirname "$target")"
+        interactive_compress
+        
+        return 0
+    else
+        echo -e "${gl_hong}压缩失败！${gl_bai}"
+        return 1
+    fi
+}
+
+# 解压文件 - 独立函数
+extract_file() {
+    local archive="$1" output_dir="${2:-.}" auto_yes="${3:-false}"
+
+    [[ -f "$archive" ]] || {
+        echo -e "${gl_hong}错误：'$archive' 不存在！${gl_bai}"; return 1
+    }
+
+    [[ -d "$output_dir" ]] || {
+        echo -e "${gl_huang}创建目录：$output_dir${gl_bai}"; mkdir -p "$output_dir"
+    }
+
+    local cmd=() confirm
+    case "$archive" in
+        *.zip)
+            if [[ "$auto_yes" == "true" ]]; then
+                cmd=("unzip" "-o" "-q")  # 自动覆盖所有文件
+            else
+                cmd=("unzip" "-q")  # 交互式处理重复文件
+            fi
+            command -v unzip &> /dev/null || {
+                echo -e "${gl_hong}错误：unzip 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        *.7z)
+            cmd=("7z" "x" "-y")
+            command -v 7z &> /dev/null || {
+                echo -e "${gl_hong}错误：7z 命令未安装！${gl_bai}"; return 1
+            }
+            ;;
+        *.tar) cmd=("tar" "-xf") ;;
+        *.tar.gz|*.tgz) cmd=("tar" "-zxf") ;;
+        *.tar.bz2|*.tbz2) cmd=("tar" "-jxf") ;;
+        *.tar.xz|*.txz) cmd=("tar" "-Jxf") ;;
+        *.rar)
+            if command -v unrar &> /dev/null; then
+                cmd=("unrar" "x" "-inul")
+            elif command -v rar &> /dev/null; then
+                cmd=("rar" "x" "-inul")
+            else
+                echo -e "${gl_hong}错误：unrar 或 rar 命令未安装！${gl_bai}"; return 1
+            fi
+            ;;
+        *.gz)
+            [[ "$auto_yes" != "true" ]] && {
+                safe_read "解压.gz文件将覆盖原文件，是否继续？[y/N]: " confirm "any"
+                [[ $confirm =~ ^[Yy]$ ]] || { echo -e "${gl_huang}已取消${gl_bai}"; return 0; }
+            }
+            cmd=("gzip" "-d")
+            ;;
+        *.bz2)
+            [[ "$auto_yes" != "true" ]] && {
+                safe_read "解压.bz2文件将覆盖原文件，是否继续？[y/N]: " confirm "any"
+                [[ $confirm =~ ^[Yy]$ ]] || { echo -e "${gl_huang}已取消${gl_bai}"; return 0; }
+            }
+            cmd=("bzip2" "-d")
+            ;;
+        *.xz)
+            [[ "$auto_yes" != "true" ]] && {
+                safe_read "解压.xz文件将覆盖原文件，是否继续？[y/N]: " confirm "any"
+                [[ $confirm =~ ^[Yy]$ ]] || { echo -e "${gl_huang}已取消${gl_bai}"; return 0; }
+            }
+            cmd=("xz" "-d")
+            ;;
+        *)
+            echo -e "${gl_hong}不支持的压缩格式：$archive${gl_bai}"; return 1
+            ;;
+    esac
+
+    echo -e "${gl_lv}正在解压：$archive → $output_dir${gl_bai}"
+
+    # 处理解压过程中的重复文件
+    if [[ "$archive" == *.zip && "$auto_yes" != "true" ]]; then
+        echo -e "${gl_huang}如果遇到重复文件，请选择操作：${gl_bai}"
+        echo -e "${gl_huang}[y] 覆盖当前文件${gl_bai}"
+        echo -e "${gl_huang}[n] 跳过当前文件${gl_bai}"
+        echo -e "${gl_huang}[A] 覆盖所有重复文件${gl_bai}"
+        echo -e "${gl_huang}[N] 跳过所有重复文件${gl_bai}"
+        echo -e "${gl_huang}[r] 重命名当前文件${gl_bai}"
+    fi
+
+    local result=0
+    case "$archive" in
+        *.zip) 
+            "${cmd[@]}" "$archive" -d "$output_dir"
+            result=$?
+            ;;
+        *.7z) 
+            "${cmd[@]}" "$archive" "-o$output_dir"
+            result=$?
+            ;;
+        *.tar|*.tar.gz|*.tar.bz2|*.tar.xz|*.tgz|*.tbz2|*.txz)
+            "${cmd[@]}" "$archive" -C "$output_dir"
+            result=$?
+            ;;
+        *.rar) 
+            "${cmd[@]}" "$archive" "$output_dir/"
+            result=$?
+            ;;
+        *.gz|*.bz2|*.xz) 
+            "${cmd[@]}" "$archive"
+            result=$?
+            ;;
+    esac
+
+    if [[ $result -eq 0 ]]; then
+        echo -e "${gl_lv}解压完成！${gl_bai}"
+        return 0
+    else
+        echo -e "${gl_hong}解压失败！${gl_bai}"
+        return 1
+    fi
+}
+
+# 交互式压缩 - 横向排列
+interactive_compress() {
+    clear
+    echo -e "${gl_zi}>>> 压缩模式${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+    local list=() item i choice target fmt_idx format
+
+    # 使用更简单的方法获取文件和目录列表
+    for item in *; do
+        # 排除隐藏文件、目录和压缩文件
+        if [[ "$item" != .* && -e "$item" ]]; then
+            # 排除常见的压缩格式
+            if [[ ! "$item" =~ \.(zip|7z|tar|tar\.gz|tar\.bz2|tar\.xz|tgz|tbz2|txz|rar|gz|bz2|xz)$ ]]; then
+                list+=("$item")
+            fi
+        fi
+    done
+
+    # 添加子目录（非隐藏）
+    for item in */; do
+        if [[ -d "$item" && "$item" != .*/ && "$item" != "./" ]]; then
+            # 去掉末尾的斜杠
+            item="${item%/}"
+            list+=("$item")
+        fi
+    done
+
+    # 按字母顺序排序
+    IFS=$'\n' list=($(sort <<<"${list[*]}"))
+    unset IFS
+
+    if ((${#list[@]}==0)); then
+        echo -e "${gl_huang}(当前目录无可压缩的文件/目录)${gl_bai}"
+        echo -e "${gl_bufan}按任意键返回...${gl_bai}"
+        read -n1 -s
+        return
+    else
+        echo -e "${gl_bufan}当前目录下的文件/目录：${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+
+        # 横向排列显示
+        local count=0
+        local items_per_line=4  # 每行显示4个项目
+        local max_length=0
+
+        # 计算最长项目名的长度，用于对齐
+        for item in "${list[@]}"; do
+            local len=${#item}
+            if [ $len -gt $max_length ]; then
+                max_length=$len
+            fi
+        done
+
+        max_length=$((max_length + 4))  # 增加一些间距
+
+        for i in "${!list[@]}"; do
+            count=$((count + 1))
+            # 使用黄色显示序号，白色显示项目名
+            printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$count" "${list[i]}"
+
+            # 每行显示指定数量的项目后换行
+            if [ $((count % items_per_line)) -eq 0 ]; then
+                echo ""
+            fi
+        done
+
+        # 如果最后一行不满，确保换行
+        if [ $((count % items_per_line)) -ne 0 ]; then
+            echo ""
+        fi
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+    fi
+
+    echo -e "${gl_huang}提示：可以使用 Tab 键补全文件/目录名，方向键回退编辑${gl_bai}"
+    read_with_completion "请输入序号选择，或手动输入文件名/目录名（留空取消）: " choice "file"
+
+    [[ -z "$choice" ]] && { echo -e "${gl_huang}已取消${gl_bai}"; return; }
+
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice>=1 && choice<=${#list[@]} )); then
+        target="${list[$((choice-1))]}"
+    else
+        target="$choice"
+    fi
+
+    [[ -e "$target" ]] || { echo -e "${gl_hong}错误：'$target' 不存在！${gl_bai}"; return; }
+
+    echo -e "${gl_huang}请选择压缩格式：${gl_bai}"
+    # 横向排列显示格式选项
+    echo -e "${gl_huang}1.${gl_bai} zip        ${gl_huang}2.${gl_bai} 7z         ${gl_huang}3.${gl_bai} tar.gz"
+    echo -e "${gl_huang}4.${gl_bai} tar.xz     ${gl_huang}5.${gl_bai} tar.bz2    ${gl_huang}6.${gl_bai} tar"
+    safe_read "输入序号 [1-6]: " fmt_idx "number"
+
+    case "$fmt_idx" in
+        1) format="zip" ;;
+        2) format="7z" ;;
+        3) format="tar.gz" ;;
+        4) format="tar.xz" ;;
+        5) format="tar.bz2" ;;
+        6) format="tar" ;;
+        *) echo -e "${gl_hong}无效序号！${gl_bai}"; return ;;
+    esac
+
+    # 调用独立的压缩函数
+    compress_file "$target" "$format" "."
+}
+
+# 交互式解压 - 横向排列
+interactive_extract() {
+    clear
+    echo -e "${gl_zi}>>> 解压模式${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+    local list=() file i choice archive dest
+    
+    # 修复：使用更安全的方法获取压缩包文件
+    local extensions=("zip" "7z" "tar" "tar.gz" "tar.bz2" "tar.xz" "tgz" "tbz2" "txz" "rar" "gz" "bz2" "xz")
+    for ext in "${extensions[@]}"; do
+        for file in *."$ext"; do
+            if [[ -f "$file" ]]; then
+                list+=("$file")
+            fi
+        done
+    done
+    
+    # 如果没有压缩包文件，显示提示并等待用户操作
+    if ((${#list[@]}==0)); then
+        echo -e "${gl_huang}当前目录无压缩包文件${gl_bai}"
+        echo -e "${gl_huang}------------------------${gl_bai}"
+        echo -e "${gl_bufan}按任意键返回...${gl_bai}"
+        read -n1 -s
+        return
+    else
+        echo -e "${gl_bufan}当前目录下的压缩包：${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        
+        # 横向排列显示
+        local count=0
+        local items_per_line=4  # 每行显示4个项目
+        local max_length=0
+        
+        # 计算最长文件名的长度，用于对齐
+        for file in "${list[@]}"; do
+            local len=${#file}
+            if [ $len -gt $max_length ]; then
+                max_length=$len
+            fi
+        done
+        
+        max_length=$((max_length + 4))  # 增加一些间距
+        
+        for i in "${!list[@]}"; do
+            count=$((count + 1))
+            # 使用黄色显示序号，白色显示文件名
+            printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$count" "${list[i]}"
+            
+            # 每行显示指定数量的项目后换行
+            if [ $((count % items_per_line)) -eq 0 ]; then
+                echo ""
+            fi
+        done
+        
+        # 如果最后一行不满，确保换行
+        if [ $((count % items_per_line)) -ne 0 ]; then
+            echo ""
+        fi
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+    fi
+    
+    echo -e "${gl_huang}提示：可以使用 Tab 键补全文件名，方向键回退编辑${gl_bai}"
+    read_with_completion "请输入序号选择，或手动输入文件名（留空取消）: " choice "file"
+    
+    [[ -z "$choice" ]] && { echo -e "${gl_huang}已取消${gl_bai}"; return; }
+    
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice>=1 && choice<=${#list[@]} )); then
+        archive="${list[$((choice-1))]}"
+    else
+        archive="$choice"
+    fi
+    
+    [[ -f "$archive" ]] || { echo -e "${gl_hong}错误：'$archive' 不存在！${gl_bai}"; return; }
+    
+    read_with_completion "请输入解压目标目录（留空则当前目录）: " dest "directory"
+    dest=${dest:-.}
+    
+    extract_file "$archive" "$dest" "false"
+}
+
+# 快速解压当前目录下的压缩文件
+quick_extract() {
+    echo -e "${gl_zi}>>> 快速解压模式${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+    
+    # 显示当前目录下的所有压缩文件
+    local list=() file i choice archive dest
+    
+    # 获取压缩包文件
+    local extensions=("zip" "7z" "tar" "tar.gz" "tar.bz2" "tar.xz" "tgz" "tbz2" "txz" "rar" "gz" "bz2" "xz")
+    for ext in "${extensions[@]}"; do
+        for file in *."$ext"; do
+            if [[ -f "$file" ]]; then
+                list+=("$file")
+            fi
+        done
+    done
+    
+    if ((${#list[@]}==0)); then
+        echo -e "${gl_huang}当前目录无压缩包文件${gl_bai}"
+        echo -e "${gl_bufan}按任意键返回...${gl_bai}"
+        read -n1 -s
+        return
+    fi
+    
+    # 如果有多个压缩文件，让用户选择
+    if ((${#list[@]} > 1)); then
+        echo -e "${gl_bufan}发现多个压缩文件：${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        
+        # 横向排列显示
+        local count=0
+        local items_per_line=4
+        local max_length=0
+        
+        for file in "${list[@]}"; do
+            local len=${#file}
+            if [ $len -gt $max_length ]; then
+                max_length=$len
+            fi
+        done
+        
+        max_length=$((max_length + 4))
+        
+        for i in "${!list[@]}"; do
+            count=$((count + 1))
+            printf "${gl_huang}%2d.${gl_bai} %-${max_length}s" "$count" "${list[i]}"
+            if [ $((count % items_per_line)) -eq 0 ]; then
+                echo ""
+            fi
+        done
+        
+        if [ $((count % items_per_line)) -ne 0 ]; then
+            echo ""
+        fi
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        
+        read -e -p "请选择要解压的文件序号（留空取消）: " choice
+        [[ -z "$choice" ]] && { echo -e "${gl_huang}已取消${gl_bai}"; return; }
+        
+        if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice>=1 && choice<=${#list[@]} )); then
+            archive="${list[$((choice-1))]}"
+        else
+            echo -e "${gl_hong}无效序号！${gl_bai}"
+            return
+        fi
+    else
+        # 如果只有一个压缩文件，直接使用
+        archive="${list[0]}"
+        echo -e "${gl_lv}发现压缩文件: $archive${gl_bai}"
+        echo -e "${gl_huang}将自动解压此文件${gl_bai}"
+    fi
+    
+    [[ -f "$archive" ]] || { echo -e "${gl_hong}错误：'$archive' 不存在！${gl_bai}"; return; }
+    
+    # 询问解压目录
+    read -e -p "请输入解压目标目录（留空则当前目录）: " dest
+    dest=${dest:-.}
+    
+    # 调用解压函数
+    extract_file "$archive" "$dest" "false"
+    
+    echo -e "${gl_bufan}按任意键继续...${gl_bai}"
+    read -n1 -s
+}
+
+# 解压指定文件
+extract_specific() {
+    local archive="$1"
+    local dest="${2:-.}"
+    
+    if [[ -z "$archive" ]]; then
+        echo -e "${gl_hong}错误：请指定要解压的文件${gl_bai}"
+        return 1
+    fi
+    
+    [[ -f "$archive" ]] || {
+        echo -e "${gl_hong}错误：'$archive' 不存在！${gl_bai}"
+        return 1
+    }
+    
+    echo -e "${gl_lv}正在解压: $archive → $dest${gl_bai}"
+    extract_file "$archive" "$dest" "false"
+}
+
+# 函数_解压压缩工具
 compress_tool() {
-    # 颜色定义
-    local RED='\033[31m' GREEN='\033[32m' YELLOW='\033[33m' BLUE='\033[34m'
-    local PURPLE='\033[35m' CYAN='\033[36m' RESET='\033[0m'
+    # 使用主脚本定义的颜色变量
     
     # 变量定义
     local install_only=false compress_file="" extract_file="" compress_format=""
     local output_dir="" auto_yes=false system_type=""
     
-    # 显示线条
-    _line() { printf "${CYAN}==============================================\n${RESET}"; }
-    
     # 设置 Tab 补全
-    _setup_completion() {
+    setup_completion() {
         local current_word="${COMP_WORDS[COMP_CWORD]}"
         local previous_word="${COMP_WORDS[COMP_CWORD-1]}"
         
@@ -14169,85 +15943,8 @@ compress_tool() {
     
     # 注册补全函数（仅在直接调用时）
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-        complete -F _setup_completion compress_tool
+        complete -F setup_completion compress_tool
     fi
-    
-    # 增强的读取函数，支持 Tab 补全
-    _read_with_completion() {
-        local prompt="$1"
-        local var_name="$2"
-        local completion_type="$3"  # file, directory, format
-        
-        # 保存当前设置
-        local original_inputrc="$INPUTRC"
-        export INPUTRC=/dev/null  # 禁用系统 inputrc 以获得一致行为
-        
-        case "$completion_type" in
-            file)
-                # 文件补全
-                read -e -p "$prompt" -i "" "$var_name"
-                ;;
-            directory)
-                # 目录补全
-                read -e -p "$prompt" -i "" "$var_name"
-                ;;
-            format)
-                # 格式补全
-                read -e -p "$prompt" -i "" "$var_name"
-                ;;
-            *)
-                # 普通读取
-                read -p "$prompt" "$var_name"
-                ;;
-        esac
-        
-        # 恢复原始设置
-        export INPUTRC="$original_inputrc"
-    }
-    
-    # 安全读取函数，支持回退和基本验证
-    _safe_read() {
-        local prompt="$1"
-        local var_name="$2"
-        local validation="$3"  # number, file, dir, any
-        
-        while true; do
-            read -e -p "$prompt" "$var_name"
-            
-            # 处理空输入
-            if [[ -z "${!var_name}" ]]; then
-                echo -e "${YELLOW}输入为空，请重新输入${RESET}"
-                continue
-            fi
-            
-            # 验证输入
-            case "$validation" in
-                number)
-                    if [[ ! "${!var_name}" =~ ^[0-9]+$ ]]; then
-                        echo -e "${RED}请输入有效的数字${RESET}"
-                        continue
-                    fi
-                    ;;
-                file)
-                    if [[ ! -f "${!var_name}" ]]; then
-                        echo -e "${RED}文件不存在，请重新输入${RESET}"
-                        continue
-                    fi
-                    ;;
-                dir)
-                    if [[ ! -d "${!var_name}" ]]; then
-                        echo -e "${RED}目录不存在，请重新输入${RESET}"
-                        continue
-                    fi
-                    ;;
-                any)
-                    # 任何非空输入都接受
-                    ;;
-            esac
-            
-            break
-        done
-    }
     
     # 显示帮助
     _show_help() {
@@ -14280,6 +15977,7 @@ Linux 压缩解压工具
   - Tab 键补全文件和目录名
   - 支持使用方向键回退和编辑
   - 输入验证和错误提示
+  - 文件/目录删除功能
 EOF
     }
 
@@ -14326,27 +16024,27 @@ EOF
         fi
         
         if [[ ${#packages[@]} -eq 0 ]]; then
-            echo -e "${GREEN}所有必要软件已安装！${RESET}"
+            echo -e "${gl_lv}所有必要软件已安装！${gl_bai}"
             return 0
         fi
         
-        echo -e "${YELLOW}需要安装以下软件：${RESET}"
-        printf "  ${GREEN}•${RESET} %s\n" "${packages[@]}"
+        echo -e "${gl_huang}需要安装以下软件：${gl_bai}"
+        printf "  ${gl_lv}•${gl_bai} %s\n" "${packages[@]}"
         
         # 非root用户提示
         if [[ $EUID -ne 0 ]]; then
-            echo -e "${YELLOW}提示：非root用户，跳过自动安装软件${RESET}"
-            echo -e "${YELLOW}如果遇到命令未找到错误，请以root权限运行${RESET}"
+            echo -e "${gl_huang}提示：非root用户，跳过自动安装软件${gl_bai}"
+            echo -e "${gl_huang}如果遇到命令未找到错误，请以root权限运行${gl_bai}"
             return 1
         fi
         
         case "$system" in
             ubuntu|debian|linuxmint|kali)
-                echo -e "${YELLOW}使用 apt 安装...${RESET}"
+                echo -e "${gl_huang}使用 apt 安装...${gl_bai}"
                 apt update && apt install -y "${packages[@]}" || return 1
                 ;;
             centos|rhel|fedora|rocky|almalinux)
-                echo -e "${YELLOW}使用 yum/dnf 安装...${RESET}"
+                echo -e "${gl_huang}使用 yum/dnf 安装...${gl_bai}"
                 if command -v dnf &> /dev/null; then
                     dnf install -y "${packages[@]}" || return 1
                 else
@@ -14354,290 +16052,48 @@ EOF
                 fi
                 ;;
             arch|manjaro)
-                echo -e "${YELLOW}使用 pacman 安装...${RESET}"
+                echo -e "${gl_huang}使用 pacman 安装...${gl_bai}"
                 pacman -Sy --noconfirm "${packages[@]}" || return 1
                 ;;
             opensuse*)
-                echo -e "${YELLOW}使用 zypper 安装...${RESET}"
+                echo -e "${gl_huang}使用 zypper 安装...${gl_bai}"
                 zypper install -y "${packages[@]}" || return 1
                 ;;
             *)
-                echo -e "${RED}无法自动安装软件，请手动安装：${RESET}"
-                printf "  ${YELLOW}•${RESET} %s\n" "${packages[@]}"
+                echo -e "${gl_hong}无法自动安装软件，请手动安装：${gl_bai}"
+                printf "  ${gl_huang}•${gl_bai} %s\n" "${packages[@]}"
                 return 1
                 ;;
         esac
         
-        echo -e "${GREEN}软件安装成功！${RESET}"
+        echo -e "${gl_lv}软件安装成功！${gl_bai}"
         return 0
     }
 
-    # 压缩文件
-    _compress_file() {
-        local target="$1" format="$2" output_dir="${3:-.}"
-        
-        [[ -e "$target" ]] || {
-            echo -e "${RED}错误：'$target' 不存在！${RESET}"
-            return 1
-        }
-        
-        local ext="" cmd=() base_name output_file
-        base_name=$(basename "$target")
-        
-        case "$format" in
-            zip)
-                ext="zip"; cmd=("zip" "-r" "-q")
-                command -v zip &> /dev/null || {
-                    echo -e "${RED}错误：zip 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            7z)
-                ext="7z"; cmd=("7z" "a")
-                command -v 7z &> /dev/null || {
-                    echo -e "${RED}错误：7z 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            tar.gz|tgz)
-                ext="tar.gz"; cmd=("tar" "-zcf")
-                command -v tar &> /dev/null || {
-                    echo -e "${RED}错误：tar 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            tar.xz|txz)
-                ext="tar.xz"; cmd=("tar" "-Jcf")
-                command -v tar &> /dev/null || command -v xz &> /dev/null || {
-                    echo -e "${RED}错误：tar 或 xz 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            tar.bz2|tbz2)
-                ext="tar.bz2"; cmd=("tar" "-jcf")
-                command -v tar &> /dev/null || command -v bzip2 &> /dev/null || {
-                    echo -e "${RED}错误：tar 或 bzip2 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            tar)
-                ext="tar"; cmd=("tar" "-cf")
-                command -v tar &> /dev/null || {
-                    echo -e "${RED}错误：tar 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            *)
-                echo -e "${RED}不支持的压缩格式：$format${RESET}"
-                echo -e "${YELLOW}支持的格式：zip, 7z, tar.gz, tar.xz, tar.bz2, tar${RESET}"
-                return 1
-                ;;
-        esac
-        
-        output_file="$output_dir/${base_name%%/}.${ext}"
-        echo -e "${GREEN}正在压缩：$target → $output_file${RESET}"
-        
-        case "$format" in
-            zip|7z) "${cmd[@]}" "$output_file" "$target" ;;
-            *) "${cmd[@]}" "$output_file" -C "$(dirname "$target")" "$(basename "$target")" ;;
-        esac
-        
-        if [[ $? -eq 0 ]]; then
-            echo -e "${GREEN}压缩完成：$output_file${RESET}"
-            return 0
-        else
-            echo -e "${RED}压缩失败！${RESET}"
-            return 1
-        fi
-    }
-
-    # 解压文件
-    _extract_file() {
-        local archive="$1" output_dir="${2:-.}" auto_yes="${3:-false}"
-        
-        [[ -f "$archive" ]] || {
-            echo -e "${RED}错误：'$archive' 不存在！${RESET}"; return 1
-        }
-        
-        [[ -d "$output_dir" ]] || {
-            echo -e "${YELLOW}创建目录：$output_dir${RESET}"; mkdir -p "$output_dir"
-        }
-        
-        local cmd=() confirm
-        case "$archive" in
-            *.zip)
-                cmd=("unzip" "-q")
-                command -v unzip &> /dev/null || {
-                    echo -e "${RED}错误：unzip 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            *.7z)
-                cmd=("7z" "x" "-y")
-                command -v 7z &> /dev/null || {
-                    echo -e "${RED}错误：7z 命令未安装！${RESET}"; return 1
-                }
-                ;;
-            *.tar) cmd=("tar" "-xf") ;;
-            *.tar.gz|*.tgz) cmd=("tar" "-zxf") ;;
-            *.tar.bz2|*.tbz2) cmd=("tar" "-jxf") ;;
-            *.tar.xz|*.txz) cmd=("tar" "-Jxf") ;;
-            *.rar)
-                if command -v unrar &> /dev/null; then
-                    cmd=("unrar" "x" "-inul")
-                elif command -v rar &> /dev/null; then
-                    cmd=("rar" "x" "-inul")
-                else
-                    echo -e "${RED}错误：unrar 或 rar 命令未安装！${RESET}"; return 1
-                fi
-                ;;
-            *.gz)
-                [[ "$auto_yes" != "true" ]] && {
-                    _safe_read "解压.gz文件将覆盖原文件，是否继续？[y/N]: " confirm "any"
-                    [[ $confirm =~ ^[Yy]$ ]] || { echo -e "${YELLOW}已取消${RESET}"; return 0; }
-                }
-                cmd=("gzip" "-d")
-                ;;
-            *.bz2)
-                [[ "$auto_yes" != "true" ]] && {
-                    _safe_read "解压.bz2文件将覆盖原文件，是否继续？[y/N]: " confirm "any"
-                    [[ $confirm =~ ^[Yy]$ ]] || { echo -e "${YELLOW}已取消${RESET}"; return 0; }
-                }
-                cmd=("bzip2" "-d")
-                ;;
-            *.xz)
-                [[ "$auto_yes" != "true" ]] && {
-                    _safe_read "解压.xz文件将覆盖原文件，是否继续？[y/N]: " confirm "any"
-                    [[ $confirm =~ ^[Yy]$ ]] || { echo -e "${YELLOW}已取消${RESET}"; return 0; }
-                }
-                cmd=("xz" "-d")
-                ;;
-            *)
-                echo -e "${RED}不支持的压缩格式：$archive${RESET}"; return 1
-                ;;
-        esac
-        
-        echo -e "${GREEN}正在解压：$archive → $output_dir${RESET}"
-        
-        local result=0
-        case "$archive" in
-            *.zip) "${cmd[@]}" "$archive" -d "$output_dir" ;;
-            *.7z) "${cmd[@]}" "$archive" "-o$output_dir" ;;
-            *.tar|*.tar.gz|*.tar.bz2|*.tar.xz|*.tgz|*.tbz2|*.txz)
-                "${cmd[@]}" "$archive" -C "$output_dir" ;;
-            *.rar) "${cmd[@]}" "$archive" "$output_dir/" ;;
-            *.gz|*.bz2|*.xz) "${cmd[@]}" "$archive" ;;
-        esac
-        result=$?
-        
-        if [[ $result -eq 0 ]]; then
-            echo -e "${GREEN}解压完成！${RESET}"; return 0
-        else
-            echo -e "${RED}解压失败！${RESET}"; return 1
-        fi
-    }
-
     # 交互式菜单
-    _interactive_menu() {
+    interactive_menu() {
         while true; do
-            _line
-            printf "${BLUE}%-30s${RESET}\n" "Linux 压缩/解压小工具"
-            _line
-            echo -e "  ${GREEN}1)${RESET} 压缩文件/目录"
-            echo -e "  ${GREEN}2)${RESET} 解压文件"
-            echo -e "  ${GREEN}0)${RESET} 退出"
-            _line
-            _safe_read "请选择操作 [0-2]: " choice "number"
+            clear
+            echo -e ""
+            echo -e "Linux压缩/解压工具"
+            echo -e "${gl_bufan}------------------------${gl_bai}"
+            echo -e "${gl_bufan}1. ${gl_bai} 压缩文件/目录"
+            echo -e "${gl_bufan}2. ${gl_bai} 解压文件"
+            echo -e "${gl_bufan}3. ${gl_bai} 删除文件/目录"
+            echo -e "${gl_bufan}4. ${gl_bai} 文件回收站"
+            echo -e "${gl_bufan}------------------------${gl_bai}"
+            echo -e "${gl_bufan}0. ${gl_bai} 退出"
+            echo -e "${gl_bufan}------------------------${gl_bai}"
+            safe_read "请选择操作 [0-3]: " choice "number"
             case $choice in
-                1) _interactive_compress ;;
-                2) _interactive_extract ;;
-                0) echo -e "${YELLOW}感谢使用，再见！${RESET}"; return 0 ;;
-                *) echo -e "${RED}无效选择，请重试！${RESET}" ;;
+                1) interactive_compress ;;
+                2) interactive_extract ;;
+                3) interactive_delete ;;
+                4) manage_trash_menu ;;
+                0) echo -e "${gl_huang}感谢使用，再见！${gl_bai}"; return 0 ;;
+                *) echo -e "${gl_hong}无效选择，请重试！${gl_bai}" ;;
             esac
         done
-    }
-
-    # 交互式压缩
-    _interactive_compress() {
-        _line; echo -e "${PURPLE}>>> 压缩模式${RESET}"
-        
-        local list=() item i choice target fmt_idx format
-        while IFS= read -r -d '' item; do
-            list+=("$item")
-        done < <(
-            find . -maxdepth 1 -type f \( ! -name '*.zip' ! -name '*.7z' ! -name '*.tar*' ! -name '*.rar' ! -name '*.gz' ! -name '*.bz2' ! -name '*.xz' \) -printf '%P\0' 2>/dev/null
-            find . -maxdepth 1 -type d ! -name '.' ! -name '.*' -printf '%P\0' 2>/dev/null
-        )
-        
-        if ((${#list[@]}==0)); then
-            echo -e "${YELLOW}(当前目录无可压缩的文件/目录)${RESET}"
-        else
-            echo -e "${CYAN}当前目录下的文件/目录：${RESET}"
-            for i in "${!list[@]}"; do
-                printf "  ${GREEN}%2d)${RESET} %s\n" $((i+1)) "${list[i]}"
-            done
-        fi
-        _line
-        
-        echo -e "${YELLOW}提示：可以使用 Tab 键补全文件/目录名，方向键回退编辑${RESET}"
-        _read_with_completion "请输入序号选择，或手动输入文件名/目录名（留空取消）: " choice "file"
-        
-        [[ -z $choice ]] && { echo -e "${YELLOW}已取消${RESET}"; return; }
-        
-        if [[ $choice =~ ^[0-9]+$ ]] && (( choice>=1 && choice<=${#list[@]} )); then
-            target="${list[$((choice-1))]}"
-        else
-            target="$choice"
-        fi
-        
-        [[ -e $target ]] || { echo -e "${RED}错误：'$target' 不存在！${RESET}"; return; }
-        
-        echo -e "${YELLOW}请选择压缩格式：${RESET}"
-        echo -e "  1) zip\n  2) 7z\n  3) tar.gz\n  4) tar.xz\n  5) tar.bz2\n  6) tar"
-        _safe_read "输入序号 [1-6]: " fmt_idx "number"
-        
-        case $fmt_idx in
-            1) format="zip" ;;
-            2) format="7z" ;;
-            3) format="tar.gz" ;;
-            4) format="tar.xz" ;;
-            5) format="tar.bz2" ;;
-            6) format="tar" ;;
-            *) echo -e "${RED}无效序号！${RESET}"; return ;;
-        esac
-        
-        _compress_file "$target" "$format" "."
-    }
-
-    # 交互式解压
-    _interactive_extract() {
-        _line; echo -e "${PURPLE}>>> 解压模式${RESET}"
-        
-        local list=() file i choice archive dest
-        while IFS= read -r file; do
-            list+=("$file")
-        done < <(ls -1 *.zip *.7z *.tar *.tar.gz *.tar.bz2 *.tar.xz *.tgz *.tbz2 *.txz *.rar *.gz *.bz2 *.xz 2>/dev/null | sort -u)
-        
-        if ((${#list[@]}==0)); then
-            echo -e "${YELLOW}(当前目录无压缩包)${RESET}"; return
-        else
-            echo -e "${CYAN}当前目录下的压缩包：${RESET}"
-            for i in "${!list[@]}"; do
-                printf "  ${GREEN}%2d)${RESET} %s\n" $((i+1)) "${list[i]}"
-            done
-        fi
-        _line
-        
-        echo -e "${YELLOW}提示：可以使用 Tab 键补全文件名，方向键回退编辑${RESET}"
-        _read_with_completion "请输入序号选择，或手动输入文件名（留空取消）: " choice "file"
-        
-        [[ -z $choice ]] && { echo -e "${YELLOW}已取消${RESET}"; return; }
-        
-        if [[ $choice =~ ^[0-9]+$ ]] && (( choice>=1 && choice<=${#list[@]} )); then
-            archive="${list[$((choice-1))]}"
-        else
-            archive="$choice"
-        fi
-        
-        [[ -f $archive ]] || { echo -e "${RED}错误：'$archive' 不存在！${RESET}"; return; }
-        
-        _read_with_completion "请输入解压目标目录（留空则当前目录）: " dest "directory"
-        dest=${dest:-.}
-        
-        _extract_file "$archive" "$dest" "false"
     }
 
     # 参数解析
@@ -14650,41 +16106,45 @@ EOF
             --output) output_dir="$2"; shift 2 ;;
             --auto-yes) auto_yes=true; shift ;;
             -h|--help) _show_help; return 0 ;;
-            *) echo -e "${RED}未知参数: $1${RESET}"; _show_help; return 1 ;;
+            *) echo -e "${gl_hong}未知参数: $1${gl_bai}"; _show_help; return 1 ;;
         esac
     done
 
     # 检测系统并安装软件
-    echo -e "${BLUE}检测系统环境...${RESET}"
+    echo -e "${gl_lan}检测系统环境...${gl_bai}"
     system_type=$(_detect_system)
-    echo -e "${GREEN}检测到系统类型：$system_type${RESET}"
+    echo -e "${gl_lv}检测到系统类型：$system_type${gl_bai}"
     
     if ! _install_software "$system_type"; then
-        echo -e "${RED}软件安装失败，无法继续${RESET}"
+        echo -e "${gl_hong}软件安装失败，无法继续${gl_bai}"
         return 1
     fi
     
     # 如果指定了仅安装，则退出
     if [[ "$install_only" == true ]]; then
-        echo -e "${GREEN}软件安装完成${RESET}"
+        echo -e "${gl_lv}软件安装完成${gl_bai}"
         return 0
     fi
     
     # 非交互模式：压缩
     if [[ -n "$compress_file" ]]; then
-        _compress_file "$compress_file" "$compress_format" "$output_dir"
+        compress_file "$compress_file" "$compress_format" "$output_dir"
         return $?
     fi
     
     # 非交互模式：解压
     if [[ -n "$extract_file" ]]; then
-        _extract_file "$extract_file" "$output_dir" "$auto_yes"
+        extract_file "$extract_file" "$output_dir" "$auto_yes"
         return $?
     fi
     
     # 交互模式：显示菜单
-    _interactive_menu
+    interactive_menu
 }
+
+
+
+
 
 
 
@@ -14810,6 +16270,31 @@ else
                         echo -e "${gl_bufan}正在强制更新 mobufan.sh 脚本...${gl_bai}"
 			bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/install/mobufan.sh)
 			;;
+		f|file|文件管理)
+			shift
+                        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
+			linux_file
+			;;
+		h|说明)
+			clear
+			k_info
+			;;
+		zip|gz|rar|压缩|解压)
+			clear
+                        compress_tool
+			;;
+		sc|删除|删除文件)
+			clear
+                        interactive_delete
+			;;
+		jy)
+			clear
+                        interactive_extract
+			;;
+		ys)
+			clear
+                        interactive_compress
+			;;
 		remove|del|uninstall|卸载)
 			shift
 			send_stats "卸载软件"
@@ -14831,7 +16316,8 @@ else
 			Kernel_optimize
 			;;
 		trash|hsz|回收站)
-			linux_trash
+                        manage_trash_menu
+			# linux_trash
 			;;
 		backup|bf|备份)
 			linux_backup
@@ -14839,11 +16325,9 @@ else
 		ssh|远程连接)
 			ssh_manager
 			;;
-
 		rsync|远程同步)
 			rsync_manager
 			;;
-
 		rsync_run)
 			shift
 			send_stats "定时rsync同步"
@@ -14868,80 +16352,53 @@ else
 	  		  block_container_port "$docker_name" "$ipv4_address"
 	  		fi
 			;;
-		f|file|文件管理)
-			shift
-                        echo -e "${gl_bufan}当前工作目录: ${gl_huang}$(pwd)"
-			linux_file "$@"
-			;;
-		h|说明)
-			clear
-			k_info
-			;;
-		zip|gz|rar|压缩|解压)
-			clear
-                        compress_tool
-			;;
 		loadbalance|负载均衡)
 			ldnmp_Proxy_backend
 			;;
 		stream|L4负载均衡)
 			ldnmp_Proxy_backend_stream
 			;;
-
 		swap)
 			shift
 			send_stats "快速设置虚拟内存"
 			add_swap "$@"
 			;;
-
 		time|时区)
 			shift
 			send_stats "快速设置时区"
 			set_timedate "$@"
 			;;
-
-
 		iptables_open)
 			iptables_open
 			;;
-
 		frps)
 			frps_panel
 			;;
-
 		frpc)
 			frpc_panel
 			;;
-
-
 		打开端口|dkdk)
 			shift
 			open_port "$@"
 			;;
-
 		关闭端口|gbdk)
 			shift
 			close_port "$@"
 			;;
-
 		放行IP|fxip)
 			shift
 			allow_ip "$@"
 			;;
-
 		阻止IP|zzip)
 			shift
 			block_ip "$@"
 			;;
-
 		防火墙|fhq)
 			iptables_panel
 			;;
-
 		命令收藏夹|fav)
 			linux_fav
 			;;
-
 		status|状态)
 			shift
 			send_stats "软件状态查看"
@@ -14962,13 +16419,11 @@ else
 			send_stats "软件重启"
 			restart "$@"
 			;;
-
 		enable|autostart|开机启动)
 			shift
 			send_stats "软件开机自启"
 			enable "$@"
 			;;
-
 		ssl)
 			shift
 			if [ "$1" = "ps" ]; then
@@ -14984,7 +16439,6 @@ else
 				k_info
 			fi
 			;;
-
 		docker)
 			shift
 			case $1 in
@@ -15005,7 +16459,6 @@ else
 					;;
 			esac
 			;;
-
 		web)
 		   shift
 			if [ "$1" = "cache" ]; then
@@ -15020,19 +16473,14 @@ else
 				k_info
 			fi
 			;;
-
-
 		app)
 			shift
 			send_stats "应用$@"
 			linux_panel "$@"
 			;;
-
-
 		info)
 			linux_info
 			;;
-
 		*)
 			k_info
 			;;
