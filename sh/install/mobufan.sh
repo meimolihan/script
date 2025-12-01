@@ -1,8 +1,8 @@
 #!/bin/bash
 
 sh_download() {
-    local script_path="$HOME/mobufan.sh"
     rm -rf /root/mobufan.sh /usr/local/bin/m
+    local script_path="$HOME/mobufan.sh"
     if [[ "$1" =~ ^(cn|en|tw|jp|kr|ru|ir)$ ]]; then
         local lang="$1"
         curl -sS -o "$script_path" "https://gitee.com/meimolihan/script/raw/master/sh/tool/mobufan.sh" || return 1
@@ -26,3 +26,6 @@ sh_download() {
 }
 
 sh_download "$@"
+
+
+exec /bin/bash

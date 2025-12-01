@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="50x服务器错误解决方案 - 服务故障排查指南">
+    <meta name="keywords" content="50x错误,服务器错误,故障排查">
+    <meta name="robots" content="noindex, nofollow">
+    <title>服务器错误</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #4ecdc4;
+            --secondary-color: #ff6b6b;
+            --bg-dark: #1a1a2e;
+            --bg-darker: #0c1427;
+            --text-light: #e6e6e6;
+            --text-white: #ffffff;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 动态背景Canvas */
+        #dynamic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 700px;
+            width: 90%;
+            margin: 30px auto;
+            padding: 40px;
+            background: rgba(10, 15, 30, 0.85);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            color: var(--text-white);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--secondary-color);
+            margin-bottom: 25px;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .error-icon {
+            text-align: center;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        p {
+            line-height: 1.7;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .service-name {
+            display: inline-block;
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--secondary-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .steps {
+            margin: 25px 0;
+        }
+        
+        .step {
+            margin-bottom: 25px;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .step-title::before {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            margin-right: 10px;
+            color: var(--bg-darker);
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .step:nth-child(1) .step-title::before { content: "1"; }
+        .step:nth-child(2) .step-title::before { content: "2"; }
+        .step:nth-child(3) .step-title::before { content: "3"; }
+        .step:nth-child(4) .step-title::before { content: "4"; }
+        
+        .command-container {
+            position: relative;
+            margin: 15px 0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        
+        .command {
+            background: var(--bg-darker);
+            color: var(--primary-color);
+            padding: 18px 20px;
+            border-radius: var(--border-radius);
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            overflow-x: auto;
+            border-left: 4px solid var(--primary-color);
+            padding-right: 120px;
+            white-space: nowrap;
+        }
+        
+        .copy-btn {
+            background: var(--primary-color);
+            color: var(--bg-darker);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            transition: var(--transition);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .copy-btn:hover {
+            background: #45b8b0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .copy-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .copy-btn:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 0, 0.95);
+            color: #000;
+            padding: 18px 35px;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: 1000;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+
+        .doc-link {
+            display: inline-block;
+            background: var(--bg-darker);
+            color: var(--primary-color);
+            padding: 14px 20px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            width: 100%;
+            text-align: center;
+        }
+        
+        .doc-link:hover {
+            background: rgba(76, 220, 196, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .log-section {
+            margin-bottom: 20px;
+        }
+
+        .log-description {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .error-icon {
+                font-size: 3rem;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 20px auto;
+            }
+            
+            .command {
+                padding-right: 20px;
+                font-size: 14px;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+            
+            .copy-btn {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 15px;
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                margin: 15px auto;
+            }
+            
+            .step-title {
+                font-size: 1.1rem;
+            }
+            
+            .command {
+                padding: 15px;
+            }
+        }
+        
+        /* 无障碍支持 */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* 高对比度模式支持 */
+        @media (prefers-contrast: high) {
+            :root {
+                --primary-color: #00ffff;
+                --secondary-color: #ff0000;
+                --bg-dark: #000000;
+                --bg-darker: #111111;
+                --text-light: #ffffff;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="dynamic-bg"></canvas>
+    
+    <div class="container">
+        <div class="error-icon">⚠️</div>
+        <h1>服务器错误</h1>
+        <p>很抱歉，<span class="service-name" id="service-name">当前服务</span>无法正常访问。这通常是由于该服务未运行导致的。您可以通过以下步骤尝试启动该服务：</p>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-title">使用 SSH 连接到服务器</div>
+                <div class="command-container">
+                    <div class="command" id="ssh-command">ssh root@10.10.10.251</div>
+                    <button class="copy-btn" onclick="copyCommand('ssh-command', event)" aria-label="复制SSH连接命令">复制</button>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">切换目录并启动服务</div>
+                <div class="command-container">
+                    <div class="command" id="docker-command">cd /vol1/1000/compose/test-xxx && docker-compose up -d</div>
+                    <button class="copy-btn" onclick="copyCommand('docker-command', event)" aria-label="复制启动服务命令">复制</button>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-title">查看 Nginx 日志</div>
+                
+                <!-- 错误日志 -->
+                <div class="log-section">
+                    <div class="log-description">查看错误日志（记录服务器错误信息）：</div>
+                    <div class="command-container">
+                        <div class="command" id="log-command-1">cat /etc/nginx/log/mobufan.eu.org/test-xxx_error.log</div>
+                        <button class="copy-btn" onclick="copyCommand('log-command-1', event)" aria-label="复制查看错误日志命令">复制</button>
+                    </div>
+                </div>
+                
+                <!-- 访问日志 -->
+                <div class="log-section">
+                    <div class="log-description">查看访问日志（记录所有访问请求）：</div>
+                    <div class="command-container">
+                        <div class="command" id="log-command-2">cat /etc/nginx/log/mobufan.eu.org/test-xxx_access.log</div>
+                        <button class="copy-btn" onclick="copyCommand('log-command-2', event)" aria-label="复制查看访问日志命令">复制</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-title">项目文档说明</div>
+                <div class="command-container">
+                    <a class="doc-link" href="https://test-yyy.mobufan.eu.org:666/h" target="_blank" rel="noopener" aria-label="打开项目详细文档">
+                        📖 阅读 test-xxx 详细文档
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // 服务配置 - 只需修改这部分即可适配不同服务
+        const serviceConfig = {
+            name: "test-xxx", // 服务名称
+            sshCommand: "ssh root@10.10.10.251", // SSH连接命令
+            startCommand: "cd /vol1/1000/compose/test-xxx && docker-compose up -d", // 启动服务命令
+            errorLog: "cat /etc/nginx/log/mobufan.eu.org/test-xxx_error.log", // 错误日志查看命令
+            accessLog: "cat /etc/nginx/log/mobufan.eu.org/test-xxx_access.log", // 访问日志查看命令
+            docLink: "https://test-xxx.mobufan.eu.org:666/h" // 文档链接
+        };
+        
+        // 动态背景实现
+        class DynamicBackground {
+            constructor() {
+                this.canvas = document.getElementById('dynamic-bg');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.particleCount = 60;
+                this.mouse = { x: 0, y: 0 };
+                
+                this.init();
+                this.animate();
+                
+                // 窗口调整大小处理
+                window.addEventListener('resize', () => this.resize());
+                // 鼠标移动处理
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+            }
+            
+            init() {
+                this.resize();
+                this.createParticles();
+            }
+            
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.createParticles();
+            }
+            
+            createParticles() {
+                this.particles = [];
+                for (let i = 0; i < this.particleCount; i++) {
+                    const size = Math.random() * 3 + 1;
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        size: size,
+                        speedX: (Math.random() - 0.5) * 0.5,
+                        speedY: (Math.random() - 0.5) * 0.5,
+                        color: `rgba(78, 205, 196, ${Math.random() * 0.5 + 0.1})`,
+                        originalSize: size
+                    });
+                }
+            }
+            
+            handleMouseMove(e) {
+                this.mouse.x = e.clientX;
+                this.mouse.y = e.clientY;
+            }
+            
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 更新和绘制粒子
+                for (let i = 0; i < this.particles.length; i++) {
+                    const p = this.particles[i];
+                    
+                    // 鼠标交互效果
+                    const dx = this.mouse.x - p.x;
+                    const dy = this.mouse.y - p.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 100) {
+                        p.size = p.originalSize * 2;
+                        p.x -= dx * 0.02;
+                        p.y -= dy * 0.02;
+                    } else {
+                        p.size = p.originalSize;
+                    }
+                    
+                    // 边界检查
+                    if (p.x <= 0 || p.x >= this.canvas.width) p.speedX = -p.speedX;
+                    if (p.y <= 0 || p.y >= this.canvas.height) p.speedY = -p.speedY;
+                    
+                    // 更新位置
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    
+                    // 绘制粒子
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fill();
+                    
+                    // 绘制连线
+                    for (let j = i + 1; j < this.particles.length; j++) {
+                        const p2 = this.particles[j];
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 120) {
+                            this.ctx.beginPath();
+                            this.ctx.strokeStyle = `rgba(78, 205, 196, ${0.2 * (1 - distance/120)})`;
+                            this.ctx.lineWidth = 0.5;
+                            this.ctx.moveTo(p.x, p.y);
+                            this.ctx.lineTo(p2.x, p2.y);
+                            this.ctx.stroke();
+                        }
+                    }
+                }
+                
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // 初始化页面内容
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新服务名称
+            document.getElementById('service-name').textContent = serviceConfig.name;
+            
+            // 更新命令
+            document.getElementById('ssh-command').textContent = serviceConfig.sshCommand;
+            document.getElementById('docker-command').textContent = serviceConfig.startCommand;
+            document.getElementById('log-command-1').textContent = serviceConfig.errorLog;
+            document.getElementById('log-command-2').textContent = serviceConfig.accessLog;
+            
+            // 更新文档链接
+            document.querySelector('.doc-link').href = serviceConfig.docLink;
+            
+            // 初始化动态背景
+            new DynamicBackground();
+        });
+        
+        // 复制命令函数
+        async function copyCommand(id, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            const commandElement = document.getElementById(id);
+            const button = event?.target;
+            const textToCopy = commandElement.textContent.trim();
+            
+            // 禁用按钮防止重复点击
+            if (button) {
+                button.disabled = true;
+                const originalText = button.textContent;
+                button.textContent = '复制中...';
+            }
+            
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(textToCopy);
+                    showToast('✅ 命令已复制到剪贴板！');
+                } else {
+                    // 降级方案
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+                    textArea.style.position = "fixed";
+                    textArea.style.opacity = "0";
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    if (!successful) throw new Error('execCommand failed');
+                    showToast('✅ 命令已复制！');
+                }
+            } catch (err) {
+                console.error('复制失败:', err);
+                showToast('❌ 复制失败，请手动选择文本复制');
+            } finally {
+                // 恢复按钮状态
+                if (button) {
+                    setTimeout(() => {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }, 1500);
+                }
+            }
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 全局错误处理
+        window.addEventListener('error', function(e) {
+            console.error('页面错误:', e.error);
+        });
+        
+        // 确保所有资源加载失败时不影响主要功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.addEventListener('error', function() {
+                    this.style.display = 'none';
+                });
+            });
+            
+            // 添加按钮点击反馈
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

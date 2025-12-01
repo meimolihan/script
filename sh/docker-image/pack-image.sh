@@ -39,7 +39,7 @@ done
 
 # 3. 循环选择格式
 while true; do
-    read -erp "选择打包格式  1) .tar   2) .tar.gz  （输入 1 或 2）： " FMT
+    read -erp "选择打包格式 1 .tar  2 .tar.gz（输入 1 或 2）： " FMT
     case "$FMT" in
         1) EXT="tar"; break ;;
         2) EXT="tar.gz"; break ;;
@@ -67,6 +67,10 @@ else
     docker save -o "$OUT" "$IMG"
 fi
 
+# 获取文件的绝对路径
+FILE_PATH=$(realpath "$OUT")
+FILE_SIZE=$(du -h "$OUT" | cut -f1)
+
 # 6. 静默校验 + 打印校验后的镜像名:版本
 echo -e "${YEL}正在静默校验 …${NC}"
 if [[ "$EXT" == "tar.gz" ]]; then
@@ -80,8 +84,11 @@ else
     echo -e "${GRN}检验后镜像名称与版本：${LOADED}${NC}"
 fi
 
-# 7. 提示加载命令
+# 7. 提示加载命令和文件位置
 echo -e "${YEL}------------------------------------------------${NC}"
-echo -e "${GRN}打包完成！如需加载镜像，请执行：${NC}"
+echo -e "${GRN}打包完成！${NC}"
+echo -e "${GRN}文件存放位置：${FILE_PATH}${NC}"
+echo -e "${GRN}文件大小：${FILE_SIZE}${NC}"
+echo -e "${GRN}如需加载镜像，请执行：${NC}"
 echo -e "${GRN}docker load -i ${OUT}${NC}"
 echo -e "${YEL}------------------------------------------------${NC}"

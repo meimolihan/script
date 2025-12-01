@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # 颜色定义
-gl_kjlan="\033[36m"    # 青色
-gl_bai="\033[37m"      # 白色
-gl_reset="\033[0m"     # 重置颜色
-GREEN="\033[32m"       # 绿色
-RED="\033[31m"         # 红色
-YELLOW="\033[33m"      # 黄色
-NC="\033[0m"           # 重置颜色
+gl_hui='\e[37m'
+gl_hong='\033[31m'
+gl_lv='\033[32m'
+gl_huang='\033[33m'
+gl_lan='\033[34m'
+gl_bai='\033[0m'
+gl_zi='\033[35m'
+gl_bufan='\033[96m'
 
 git_Settings() {
     # 定义所有仓库的数组
@@ -40,7 +41,7 @@ git_Settings() {
         [26]="git@gitee.com:meimolihan/taosync.git"
         [27]="git@gitee.com:meimolihan/sun-panel.git"
         [28]="git@gitee.com:meimolihan/sun-panel-helper.git"
-        [29]="git@gitee.com:meimolihan/it-tools.git"
+        [29]="git@gitee.com:meimolihan/ittools.git"
         [30]="git@gitee.com:meimolihan/random-pic-api.git"
         [31]="git@gitee.com:meimolihan/mind-map.git"
         [32]="git@gitee.com:meimolihan/istoreos.git"
@@ -59,7 +60,7 @@ git_Settings() {
     while true; do
         clear
         # ================== 欢迎语 ==================
-        echo -e "\033[1;35m"
+        echo -e "${gl_zi}"
         cat <<'WELCOME'
  _____             _             
 |  __ \           | |            
@@ -67,122 +68,121 @@ git_Settings() {
 | |  | |/ _ \ / __| |/ / _ \ '__|
 | |__| | (_) | (__|   <  __/ |   
 |_____/ \___/ \___|_|\_\___|_|      
-
 WELCOME
-        echo -e "\033[0m"
+        echo -e "${gl_bai}"
         # ============================================
-        echo -e "${gl_kjlan}========================================${gl_reset}"
-        echo -e "Git 克隆 Docker 项目"
-        echo -e "${gl_kjlan}========================================${gl_reset}"
-        echo -e "${gl_kjlan}1.   ${gl_bai}服务管理1panel               ${gl_kjlan}2.   ${gl_bai}容器管理dpanel${gl_reset}"
-        echo -e "${gl_kjlan}3.   ${gl_bai}博客系统halo                 ${gl_kjlan}4.   ${gl_bai}博客系统hexo${gl_reset}"
-        echo -e "${gl_kjlan}5.   ${gl_bai}云文档md                     ${gl_kjlan}6.   ${gl_bai}配置编辑${gl_reset}"
-        echo -e "${gl_kjlan}7.   ${gl_bai}文档管理mindoc               ${gl_kjlan}8.   ${gl_bai}爱盼影视${gl_reset}"
-        echo -e "${gl_kjlan}9.   ${gl_bai}影视聚合libretv              ${gl_kjlan}10.  ${gl_bai}影视聚合moontv${gl_reset}"
-        echo -e "${gl_kjlan}11.  ${gl_bai}影视刮削nastools             ${gl_kjlan}12.  ${gl_bai}媒体服务emby${gl_reset}"
-        echo -e "${gl_kjlan}13.  ${gl_bai}电视助手tvhelper             ${gl_kjlan}14.  ${gl_bai}音乐下载musicn${gl_reset}"
-        echo -e "${gl_kjlan}15.  ${gl_bai}音乐播放navidrome            ${gl_kjlan}16.  ${gl_bai}小米音乐xiaomusic${gl_reset}"
-        echo -e "${gl_kjlan}17.  ${gl_bai}下载器xunlei                 ${gl_kjlan}18.  ${gl_bai}下载器qbittorrent${gl_reset}"
-        echo -e "${gl_kjlan}19.  ${gl_bai}下载器transmission           ${gl_kjlan}20.  ${gl_bai}视频下载metube${gl_reset}"
-        echo -e "${gl_kjlan}21.  ${gl_bai}网盘搜索cloud-saver          ${gl_kjlan}22.  ${gl_bai}网盘搜索pansou${gl_reset}"
-        echo -e "${gl_kjlan}23.  ${gl_bai}网盘挂载openlist             ${gl_kjlan}24.  ${gl_bai}文件服务nginx-file${gl_reset}"
-        echo -e "${gl_kjlan}25.  ${gl_bai}文件服务dufs                 ${gl_kjlan}26.  ${gl_bai}云盘同步taosync${gl_reset}"
-        echo -e "${gl_kjlan}27.  ${gl_bai}导航面板sun-panel            ${gl_kjlan}28.  ${gl_bai}导航面板helper${gl_reset}"
-        echo -e "${gl_kjlan}29.  ${gl_bai}工具箱it-tools               ${gl_kjlan}30.  ${gl_bai}随机图片random-pic-api${gl_reset}"
-        echo -e "${gl_kjlan}31.  ${gl_bai}思维导图mind-map             ${gl_kjlan}32.  ${gl_bai}路由系统istoreos${gl_reset}"
-        echo -e "${gl_kjlan}33.  ${gl_bai}网络加速kspeeder             ${gl_kjlan}34.  ${gl_bai}网站监控uptime-kuma${gl_reset}"
-        echo -e "${gl_kjlan}35.  ${gl_bai}内网测速speedtest            ${gl_kjlan}36.  ${gl_bai}语音文字easyvoice${gl_reset}"
-        echo -e "${gl_kjlan}37.  ${gl_bai}容器更新watchtower           ${gl_kjlan}38.  ${gl_bai}格式转换reubah${gl_reset}"
-        echo -e "${gl_kjlan}39.  ${gl_bai}代码托管gitea                ${gl_kjlan}40.  ${gl_bai}远程桌面ubuntu${gl_reset}"
-        echo -e "${gl_kjlan}41.  ${gl_bai}远程桌面alpine               ${gl_kjlan}42.  ${gl_bai}终端工具easynode${gl_reset}"
-        echo -e "${gl_kjlan}------------------------${gl_reset}"
-        echo -e "${gl_kjlan}88.  ${gl_bai}自定义仓库克隆${gl_reset}"
-        echo -e "${gl_kjlan}99.  ${gl_bai}克隆全部仓库${gl_reset}"
-        echo -e "${gl_kjlan}0.   ${gl_bai}退出${gl_reset}"
-        echo -e "${gl_kjlan}========================================${gl_reset}"
-        read -e -p "请输入你的选择: " sub_choice
+        echo -e "${gl_bai}"
+        echo -e "${gl_zi}>>> Git 克隆 Docker 项目${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_huang}1.   ${gl_bai}服务管理1panel               ${gl_huang}2.   ${gl_bai}容器管理dpanel"
+        echo -e "${gl_huang}3.   ${gl_bai}博客系统halo                 ${gl_huang}4.   ${gl_bai}博客系统hexo"
+        echo -e "${gl_huang}5.   ${gl_bai}云文档md                     ${gl_huang}6.   ${gl_bai}配置编辑"
+        echo -e "${gl_huang}7.   ${gl_bai}文档管理mindoc               ${gl_huang}8.   ${gl_bai}爱盼影视"
+        echo -e "${gl_huang}9.   ${gl_bai}影视聚合libretv              ${gl_huang}10.  ${gl_bai}影视聚合moontv"
+        echo -e "${gl_huang}11.  ${gl_bai}影视刮削nastools             ${gl_huang}12.  ${gl_bai}媒体服务emby"
+        echo -e "${gl_huang}13.  ${gl_bai}电视助手tvhelper             ${gl_huang}14.  ${gl_bai}音乐下载musicn"
+        echo -e "${gl_huang}15.  ${gl_bai}音乐播放navidrome            ${gl_huang}16.  ${gl_bai}小米音乐xiaomusic"
+        echo -e "${gl_huang}17.  ${gl_bai}下载器xunlei                 ${gl_huang}18.  ${gl_bai}下载器qbittorrent"
+        echo -e "${gl_huang}19.  ${gl_bai}下载器transmission           ${gl_huang}20.  ${gl_bai}视频下载metube"
+        echo -e "${gl_huang}21.  ${gl_bai}网盘搜索cloud-saver          ${gl_huang}22.  ${gl_bai}网盘搜索pansou"
+        echo -e "${gl_huang}23.  ${gl_bai}网盘挂载openlist             ${gl_huang}24.  ${gl_bai}文件服务nginx-file"
+        echo -e "${gl_huang}25.  ${gl_bai}文件服务dufs                 ${gl_huang}26.  ${gl_bai}云盘同步taosync"
+        echo -e "${gl_huang}27.  ${gl_bai}导航面板sun-panel            ${gl_huang}28.  ${gl_bai}导航面板helper"
+        echo -e "${gl_huang}29.  ${gl_bai}工具箱ittools                ${gl_huang}30.  ${gl_bai}随机图片random-pic-api"
+        echo -e "${gl_huang}31.  ${gl_bai}思维导图mind-map             ${gl_huang}32.  ${gl_bai}路由系统istoreos"
+        echo -e "${gl_huang}33.  ${gl_bai}网络加速kspeeder             ${gl_huang}34.  ${gl_bai}网站监控uptime-kuma"
+        echo -e "${gl_huang}35.  ${gl_bai}内网测速speedtest            ${gl_huang}36.  ${gl_bai}语音文字easyvoice"
+        echo -e "${gl_huang}37.  ${gl_bai}容器更新watchtower           ${gl_huang}38.  ${gl_bai}格式转换reubah"
+        echo -e "${gl_huang}39.  ${gl_bai}代码托管gitea                ${gl_huang}40.  ${gl_bai}远程桌面ubuntu"
+        echo -e "${gl_huang}41.  ${gl_bai}远程桌面alpine               ${gl_huang}42.  ${gl_bai}终端工具easynode"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_huang}88.  ${gl_bai}自定义仓库克隆${gl_bai}"
+        echo -e "${gl_huang}99.  ${gl_bai}克隆全部仓库${gl_bai}"
+        echo -e "${gl_huang}0.   ${gl_bai}退出${gl_bai}"
+        echo -e "${gl_bufan}------------------------${gl_bai}"
+        read -e -p "$(echo -e "${gl_bufan}请输入你的选择: ${gl_bai}")" sub_choice
 
         case $sub_choice in
             1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42)
-                echo "正在克隆项目 $sub_choice..."
+                echo -e "${gl_huang}正在克隆项目 $sub_choice...${gl_bai}"
                 if git clone "${repositories[$sub_choice]}"; then
-                    echo "项目 $sub_choice 克隆成功！"
+                    echo -e "${gl_lv}项目 $sub_choice 克隆成功！${gl_bai}"
                 else
-                    echo "项目 $sub_choice 克隆失败！"
+                    echo -e "${gl_hong}项目 $sub_choice 克隆失败！${gl_bai}"
                 fi
-                read -p "按任意键继续..."
+                read -p "$(echo -e "${gl_bufan}按任意键继续...${gl_bai}")"
                 ;;
             88)
                 clear
-                echo -e "${GREEN}==================================${NC}"
-                echo -e "${GREEN}        自定义仓库克隆        ${NC}"
-                echo -e "${GREEN}==================================${NC}"
-                read -rp "请输入Git仓库的URL或git clone命令: " repoUrl
+                echo -e "${gl_bufan}------------------------${gl_bai}"
+                echo -e "${gl_bufan}自定义仓库克隆${gl_bai}"
+                echo -e "${gl_bufan}------------------------${gl_bai}"
+                read -rp "$(echo -e "${gl_bufan}请输入Git仓库的URL或git clone命令: ${gl_bai}")" repoUrl
                 if [ -z "$repoUrl" ]; then
-                    echo -e "${RED}错误：未输入有效的URL${NC}"
-                    read -p "按任意键继续..."
+                    echo -e "${gl_hong}错误：未输入有效的URL${gl_bai}"
+                    read -p "$(echo -e "${gl_bufan}按任意键继续...${gl_bai}")"
                     continue
                 fi
                 local cleanUrl=${repoUrl#*git clone }
                 cleanUrl=${cleanUrl//[\"\'\']/}
                 local repoName=$(basename "$cleanUrl" .git)
 
-                echo -e "${GREEN}==================================${NC}"
-                echo -e "${GREEN}即将克隆仓库: $repoName${NC}"
-                echo -e "${GREEN}仓库地址: $cleanUrl${NC}"
-                echo -e "${GREEN}==================================${NC}"
+                echo -e "${gl_bufan}------------------------${gl_bai}"
+                echo -e "${gl_bufan}即将克隆仓库: $repoName${gl_bai}"
+                echo -e "${gl_bufan}仓库地址: $cleanUrl${gl_bai}"
+                echo -e "${gl_bufan}------------------------${gl_bai}"
 
                 if [ -d "$repoName" ]; then
-                    echo -e "${YELLOW}警告：仓库目录 '$repoName' 已存在${NC}"
-                    read -rp "是否强制重新克隆? (y/n) " overwrite
+                    echo -e "${gl_huang}警告：仓库目录 '$repoName' 已存在${gl_bai}"
+                    read -rp "$(echo -e "${gl_bufan}是否强制重新克隆? (y/n) ${gl_bai}")" overwrite
                     if [[ ${overwrite,,} != "y" ]]; then
-                        echo -e "${GREEN}已取消克隆${NC}"
-                        read -p "按任意键继续..."
+                        echo -e "${gl_lv}已取消克隆${gl_bai}"
+                        read -p "$(echo -e "${gl_bufan}按任意键继续...${gl_bai}")"
                         continue
                     fi
                     rm -rf "$repoName"
                 fi
 
                 git clone "$cleanUrl"
-                echo -e "${GREEN}==================================${NC}"
+                echo -e "${gl_bufan}------------------------${gl_bai}"
                 if [ $? -ne 0 ]; then
-                    echo -e "${RED}仓库 '$repoName' 克隆失败，请检查URL是否正确或网络连接。${NC}"
+                    echo -e "${gl_hong}仓库 '$repoName' 克隆失败，请检查URL是否正确或网络连接。${gl_bai}"
                 else
-                    echo -e "${GREEN}仓库 '$repoName' 克隆成功！${NC}"
+                    echo -e "${gl_lv}仓库 '$repoName' 克隆成功！${gl_bai}"
                 fi
-                read -p "按任意键继续..."
+                read -p "$(echo -e "${gl_bufan}按任意键继续...${gl_bai}")"
                 ;;
             99)
-                echo "正在克隆全部仓库..."
-                echo "这可能需要一些时间，请耐心等待..."
-                echo "----------------------------------------"
+                echo -e "${gl_huang}正在克隆全部仓库...${gl_bai}"
+                echo -e "${gl_huang}这可能需要一些时间，请耐心等待...${gl_bai}"
+                echo -e "${gl_bufan}----------------------------------------${gl_bai}"
                 
                 success_count=0
                 fail_count=0
                 
                 for i in {1..42}; do
                     repo_name=$(basename "${repositories[$i]}" .git)
-                    echo -n "克隆 $repo_name ... "
+                    echo -n "$(echo -e "${gl_huang}克隆 $repo_name ... ${gl_bai}")"
                     if git clone "${repositories[$i]}" 2>/dev/null; then
-                        echo -e "\033[32m成功\033[0m"
+                        echo -e "${gl_lv}成功${gl_bai}"
                         ((success_count++))
                     else
-                        echo -e "\033[31m失败\033[0m"
+                        echo -e "${gl_hong}失败${gl_bai}"
                         ((fail_count++))
                     fi
                 done
                 
-                echo "----------------------------------------"
-                echo -e "克隆完成: \033[32m成功 $success_count\033[0m, \033[31m失败 $fail_count\033[0m"
-                read -p "按任意键继续..."
+                echo -e "${gl_bufan}------------------------${gl_bai}"
+                echo -e "克隆完成: ${gl_lv}成功 $success_count${gl_bai}, ${gl_hong}失败 $fail_count${gl_bai}"
+                read -p "$(echo -e "${gl_bufan}按任意键继续...${gl_bai}")"
                 ;;
             0)
-                echo "退出程序..."
+                echo -e "${gl_huang}退出程序...${gl_bai}"
                 exit 0
                 ;;
             *)
-                echo "无效选择，请重新输入！"
-                read -p "按任意键继续..."
+                echo -e "${gl_hong}无效选择，请重新输入！${gl_bai}"
+                read -p "$(echo -e "${gl_bufan}按任意键继续...${gl_bai}")"
                 ;;
         esac
     done

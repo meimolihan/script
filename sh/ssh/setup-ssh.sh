@@ -7,77 +7,116 @@
 # 版本: v2.5.2
 # 更新日期: 2025-10-25
 # 作者: 墨不凡
-# 仓库: https://github.com/yourrepo/ssh-setup
+# 仓库: https://github.com/yourrepo/ssh-setup 
 # ==============================================
 set -e
 
 # ---------------- 颜色定义 ----------------
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-BLUE='\033[0;34m'; CYAN='\033[0;36m'; NC='\033[0m'
+gl_hui='\e[37m'
+gl_hong='\033[31m'
+gl_lv='\033[32m'
+gl_huang='\033[33m'
+gl_lan='\033[34m'
+gl_zi='\033[35m'
+gl_bufan='\033[96m'
+gl_bai='\033[0m'
 
 # ---------------- 日志函数 ----------------
-log_info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_info()  { echo -e "${gl_lan}[信息]${gl_bai} $*"; }
+log_ok()    { echo -e "${gl_lv}[成功]${gl_bai} $*"; }
+log_warn()  { echo -e "${gl_huang}[警告]${gl_bai} $*"; }
+log_error() { echo -e "${gl_hong}[错误]${gl_bai} $*" >&2; }
+
+# -------------- 无效的输入 --------------
+handle_invalid_input() {
+    echo -ne "\r${gl_hong}无效的输入,请重新输入! ${gl_zi} 2 ${gl_hong} 秒后返回"
+    sleep 1
+    echo -ne "\r${gl_huang}无效的输入,请重新输入! ${gl_zi} 1 ${gl_huang} 秒后返回"
+    sleep 1
+    echo -e "\r${gl_lv}无效的输入,请重新输入! ${gl_zi}0${gl_lv} 秒后返回"
+    sleep 0.5
+    return 2
+}
+
+# -------------- 按任意键继续 --------------
+break_end() {
+    echo -e "${gl_lv}操作完成${gl_bai}"
+    echo "按任意键继续..."
+    read -r -n 1 -s -p ""
+    echo ""
+    clear
+}
+
+# -------------- 退出脚本 --------------
+exit_script() {
+    clear
+    echo -ne "\r${gl_hong}感谢使用，再见！ ${gl_zi}2${gl_hong} 秒后自动退出${gl_bai}"
+    sleep 1
+    echo -ne "\r${gl_huang}感谢使用，再见！ ${gl_zi}1${gl_huang} 秒后自动退出${gl_bai}"
+    sleep 1
+    echo -e "\r${gl_lv}感谢使用，再见！ ${gl_zi}0${gl_lv} 秒后自动退出${gl_bai}"
+    sleep 0.5
+    clear
+    exit 0
+}
 
 # -------------- 欢迎信息 --------------
 show_welcome() {
-    echo -e "${CYAN}"
+    echo -e "${gl_bufan}"
     echo "=============================================="
     echo "      通用 Linux SSH 服务配置 v2.5.2 脚本"
     echo "=============================================="
-    echo -e "${NC}"
-    echo -e "${GREEN}脚本功能:${NC}"
+    echo -e "${gl_bai}"
+    log_info "脚本功能:"
     echo "  • 自动检测 Linux 发行版并安装 SSH 服务"
     echo "  • 配置 SSH 基本参数和优化设置"
     echo "  • 配置防火墙允许 SSH 连接"
     echo "  • 启动并启用 SSH 服务"
     echo ""
-    echo -e "${GREEN}支持的系统:${NC}"
+    log_info "支持的系统:"
     echo "  • Debian 及其衍生版 (Ubuntu, Proxmox VE, FnOS)"
     echo "  • Red Hat 系 (CentOS, RHEL, Fedora, Rocky Linux)"
     echo "  • SUSE 系 (OpenSUSE, SUSE Linux Enterprise)"
     echo "  • Arch Linux 及其衍生版"
     echo ""
-    echo -e "${YELLOW}注意:${NC}"
+    log_warn "注意:"
     echo "  • 此脚本需要 root 权限运行"
     echo "  • 脚本会修改 SSH 配置并开放防火墙"
     echo "  • 默认配置允许 root 登录，建议后续修改为更安全的设置"
     echo ""
-    echo -e "${YELLOW}安全建议:${NC}"
+    log_warn "安全建议:"
     echo "  • 更改默认 SSH 端口"
     echo "  • 禁用 root 登录并使用普通用户"
     echo "  • 使用密钥认证替代密码认证"
     echo "  • 限制可登录的用户和IP范围"
     echo "  • 考虑安装 Fail2Ban 防止暴力破解"
-    echo -e "${CYAN}=============================================="
-    echo -e "${NC}"
+    echo -e "${gl_bufan}=============================================="
+    echo -e "${gl_bai}"
 }
 
-# -------------- 确认继续（回车继续，n/N 退出） --------------
+# -------------- 确认继续 --------------
 confirm_continue() {
-    echo -e "${YELLOW}"
+    echo -e "${gl_huang}"
     read -rep $'回车继续，n/N 退出: ' -n 1 -r
-    echo -e "${NC}"
-    # 空输入或 Y/y 继续；n/N 退出；其余默认继续
+    echo -e "${gl_bai}"
     case "${REPLY,,}" in
-        n|no) echo "已取消执行脚本。"; exit 0 ;;
+        n|no) log_info "已取消执行脚本。"; exit 0 ;;
         *)    echo ;;
     esac
 }
 
-# -------------- 交互输入端口（光标紧跟提示符） --------------
+# -------------- 交互输入端口 --------------
 ask_ssh_port() {
     clear
     echo ""
-    echo -e "=============================================="
-    echo -e "                交互输入端口"
-    echo -e "=============================================="
+    echo -e "${gl_zi}>>> 配置 SSH 服务${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
     echo ""
 
     local port_input
     while true; do
-        read -rep $'\e[33m请输入 SSH 端口 (回车默认 22):\e[0m ' port_input
+        read -r -e -p "$(echo -e "${gl_bai}请输入 SSH 端口 (回车默认 ${gl_huang}22${gl_bai}): ")" port_input
+        echo ""
 
         # 默认
         [[ -z "$port_input" ]] && { SSH_PORT=22; break; }
@@ -149,7 +188,7 @@ install_ssh() {
             log_error "不支持的发行版: $OS"; exit 1
             ;;
     esac
-    log_info "SSH 服务安装完成"
+    log_ok "SSH 服务安装完成"
 }
 
 # -------------- 配置 SSH --------------
@@ -176,7 +215,7 @@ configure_ssh() {
         sed -i '/^[[:space:]]*#*[[:space:]]*X11Forwarding[[:space:]]/d' /etc/ssh/sshd_config
         echo 'X11Forwarding no' >> /etc/ssh/sshd_config
     }
-    log_info "SSH 配置完成"
+    log_ok "SSH 配置完成"
 }
 
 # -------------- 配置防火墙 --------------
@@ -196,18 +235,16 @@ configure_firewall() {
     else
         log_warn "未找到支持的防火墙工具，请手动配置"
     fi
-    log_info "防火墙配置完成"
+    log_ok "防火墙配置完成"
 }
 
 # -------------- 修改 root 密码 --------------
 ask_root_password() {
     echo ""
-    echo -e "=============================================="
-    echo -e "                修改 root 密码"
-    echo -e "=============================================="
-    echo -e "${YELLOW}"
-    read -p "修改 root 密码？(y/Y修改，回车跳过): " -re ans
-    echo -e "${NC}"
+    echo -e "${gl_bufan}修改 root 密码${gl_bai}"
+    echo -e "${gl_bufan}------------------------${gl_bai}"
+    read -r -e -p "$(echo -e "${gl_bai}修改 root 密码？(${gl_huang}y${gl_hong}/${gl_huang}Y${gl_bai}修改，回车跳过): ")" -re ans
+    echo -e "${gl_bai}"
     case "${ans,,}" in
         y|yes)
             while true; do
@@ -215,7 +252,7 @@ ask_root_password() {
                 read -s -p "请再次输入新密码: " -re pw2; echo
                 if [ "$pw1" = "$pw2" ]; then
                     echo "root:$pw1" | chpasswd 2>/dev/null && {
-                        log_info "root 密码已更新。"; break
+                        log_ok "root 密码已更新。"; break
                     } || log_warn "密码设置失败（可能过于简单），请重试。"
                 else
                     log_warn "两次输入不一致，请重新输入！"
@@ -242,30 +279,30 @@ start_ssh_service() {
             log_error "不支持的发行版: $OS"; exit 1
             ;;
     esac
-    log_info "SSH 服务已启动"
+    log_ok "SSH 服务已启动"
 }
 
 # -------------- 回显关键配置 --------------
 show_ssh_changes() {
     echo ""
     log_info "以下是 sshd_config 中本次脚本涉及的关键配置："
-    echo "------------------------------------------------"
+    echo -e "${gl_bufan}------------------------------------------------${gl_bai}"
     grep -E '^(Port|PermitRootLogin|GSSAPIAuthentication|UseDNS|Compression|ClientAliveInterval|ClientAliveCountMax|TCPKeepAlive|PrintMotd|PrintLastLog|X11Forwarding)[[:space:]]' /etc/ssh/sshd_config
-    echo "------------------------------------------------"
+    echo -e "${gl_bufan}------------------------------------------------${gl_bai}"
 }
 
 # -------------- 连接信息 --------------
 show_connection_info() {
     local ip=$(hostname -I | awk '{print $1}')
     echo ""
-    echo -e "=============================================="
+    echo -e "${gl_bufan}=============================================="
     echo -e "           SSH 服务配置完成!"
-    echo -e "=============================================="
-    echo -e "${GREEN}连接信息:${NC}"
-    echo -e "  服务器IP: ${BLUE}$ip${NC}"
-    echo -e "  SSH 端口: ${BLUE}$SSH_PORT${NC}"
-    echo -e "  连接命令: ${BLUE}ssh -p $SSH_PORT root@$ip${NC}"
-    echo -e "=============================================="
+    echo -e "==============================================${gl_bai}"
+    log_info "连接信息:"
+    echo -e "  服务器IP: ${gl_lan}$ip${gl_bai}"
+    echo -e "  SSH 端口: ${gl_lan}$SSH_PORT${gl_bai}"
+    echo -e "  连接命令: ${gl_lan}ssh -p $SSH_PORT root@$ip${gl_bai}"
+    echo -e "${gl_bufan}==============================================${gl_bai}"
 }
 
 # -------------- 主入口 --------------
@@ -283,7 +320,7 @@ main() {
     start_ssh_service
     show_ssh_changes
     show_connection_info
-    log_info "全部配置完成！"
+    log_ok "全部配置完成！"
 }
 
 main "$@"

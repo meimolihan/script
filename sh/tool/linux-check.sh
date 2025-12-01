@@ -1,5 +1,5 @@
 #!/bin/bash
-sh_v="1.0.7.1"
+sh_v="1.1.0"
 
 # —— 个人颜色定义 ——
 gl_hui='\e[37m'
@@ -56,18 +56,6 @@ mobufan_sh_update() {
 
 # 定义显示系统信息的函数
 show_system_info() {
-    # ================== 欢迎语（仅此处显示一次）==================
-    echo -e "${gl_zi}"
-    cat <<'WELCOME'
-                 _            __             
- _ __ ___   ___ | |__  _   _ / _| __ _ _ __  
-| '_ ` _ \ / _ \| '_ \| | | | |_ / _` | '_ \ 
-| | | | | | (_) | |_) | |_| |  _| (_| | | | |
-|_| |_| |_|\___/|_.__/ \__,_|_|  \__,_|_| |_|
-
-WELCOME
-    echo -e "${gl_bai}"
-    # ============================================
     echo -e "${gl_lv}命令行输入${gl_huang}g${gl_lv}可快速启动脚本${gl_bai}"
 
     # 📊 获取系统信息函数
@@ -113,18 +101,21 @@ WELCOME
     }
 
     # 🎨 显示系统信息
+    clear
+    echo -e ""
+    echo -e "${gl_zi}>>> 系统信息${gl_bai}"
     echo -e "${gl_bufan}------------------------${gl_bai}"
-    echo -e "${gl_lan}主机名称 : ${gl_hong}$(hostname)${gl_bai}"
-    echo -e "${gl_lan}内核版本 : ${gl_hong}$(uname -r)${gl_bai}"
+    echo -e "${gl_bufan}主机名称 : ${gl_bai}$(hostname)"
+    echo -e "${gl_bufan}内核版本 : ${gl_bai}$(uname -r)"
     echo -e "${gl_bufan}------------------------${gl_bai}"
-    echo -e "${gl_lan}CPU 架构 : ${gl_hong}$(uname -m)${gl_bai}"
-    echo -e "${gl_lan}CPU 占用 : ${gl_hong}$(get_cpu_usage)${gl_bai}"
+    echo -e "${gl_bufan}CPU 架构 : ${gl_bai}$(uname -m)"
+    echo -e "${gl_bufan}CPU 占用 : ${gl_bai}$(get_cpu_usage)"
     echo -e "${gl_bufan}------------------------${gl_bai}"
-    echo -e "${gl_lan}IPV4内网 : ${gl_hong}$(get_local_ip)${gl_bai}"
-    echo -e "${gl_lan}默认网关 : ${gl_hong}$(get_default_gateway)${gl_bai}"
+    echo -e "${gl_bufan}IPV4内网 : ${gl_bai}$(get_local_ip)"
+    echo -e "${gl_bufan}默认网关 : ${gl_bai}$(get_default_gateway)"
     echo -e "${gl_bufan}------------------------${gl_bai}"
-    echo -e "${gl_lan}磁盘占用 : ${gl_hong}$(get_disk_usage)${gl_bai}"
-    echo -e "${gl_lan}运行时间 : ${gl_hong}$(get_uptime)${gl_bai}"
+    echo -e "${gl_bufan}磁盘占用 : ${gl_bai}$(get_disk_usage)"
+    echo -e "${gl_bufan}运行时间 : ${gl_bai}$(get_uptime)"
     echo -e "${gl_bufan}------------------------${gl_bai}"
 }
 

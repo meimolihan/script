@@ -1,5 +1,9 @@
 #!/bin/bash
-read -p "请输入要使用的名称（例如 xunlei）: " name
+
+gl_huang='\033[33m'
+gl_bai='\033[0m'
+
+read -r -e -p "$(echo -e "${gl_bai}请输入要使用的名称 (例如 ${gl_hong}xunlei${gl_bai): ")"  name
 
 # 拷贝【说明页面】模板
 sudo cp -r /etc/nginx/html/help/test-xxx_help /etc/nginx/html/help/${name}_help
