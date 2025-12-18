@@ -8,9 +8,20 @@
 set -euo pipefail
 
 #-------------- 颜色定义 --------------
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-BLUE='\033[0;34m'; PURPLE='\033[0;35m'; CYAN='\033[0;36m'
-WHITE='\033[1;37m'; NC='\033[0m'
+gl_hui='\e[37m'
+gl_hong='\033[31m'
+gl_lv='\033[32m'
+gl_huang='\033[33m'
+gl_lan='\033[34m'
+gl_zi='\033[35m'
+gl_bufan='\033[96m'
+gl_bai='\033[0m'
+
+#-------------- 日志函数 --------------
+log_info()  { echo -e "${gl_lan}[信息]${gl_bai} $*"; }
+log_ok()    { echo -e "${gl_lv}[成功]${gl_bai} $*"; }
+log_warn()  { echo -e "${gl_huang}[警告]${gl_bai} $*"; }
+log_error() { echo -e "${gl_hong}[错误]${gl_bai} $*" >&2; }
 
 #-------------- 日志相关 --------------
 LOG_DIR="/var/log/rsync"
@@ -18,7 +29,7 @@ LOG_FILE="$LOG_DIR/rsync.log"
 mkdir -p "$LOG_DIR"
 ROTATE_CONF="/etc/logrotate.d/rsync"
 if [[ ! -f "$ROTATE_CONF" ]]; then
-  sudo tee "$ROTATE_CONF" >/dev/null <<'EOF'
+    sudo tee "$ROTATE_CONF" >/dev/null <<'EOF'
 /var/log/rsync/*.log {
     daily   rotate 4   maxage 15   compress   delaycompress
     missingok   notifempty   copytruncate
@@ -28,34 +39,34 @@ fi
 
 # 双通道日志：终端带色，文件去色
 log(){
-  local color=$1; shift
-  echo -e "${color}${*}${NC}"
-  echo "[$(date '+%F %T')] $*" >> "$LOG_FILE"
+    local color=$1; shift
+    echo -e "${color}${*}${gl_bai}"
+    echo "[$(date '+%F %T')] $*" >> "$LOG_FILE"
 }
 
 #-------------- 横幅 --------------
-echo -e "\033[1;36m
+echo -e "${gl_bai}
 ╔══════════════════════════════════════════════════════════════════════╗
-║  多目录/文件增量同步工具  rsync.sh  \033[1;33m★ v1.3 ★\033[1;36m                         ║
+║  多目录/文件增量同步工具  rsync.sh  ${gl_huang}★ v1.3 ★${gl_bai}                         ║
 ║  一键多目标 · 彩色日志 · 完成度估算 · 耗时统计                       ║
-║  使用说明：                                                          ║
-║    - 多目录同步：rsync.sh /etc/nginx /backup/nginx /mnt/nginx        ║
-║    - 多文件同步：rsync.sh -f test.txt /backup/test.txt /mnt/test.txt ║
+║  ${gl_huang}使用说明：${gl_bai}                                                          ║
+║    - 多目录同步：${gl_zi}rsync.sh ${gl_hong}/etc/nginx ${gl_huang}/backup/nginx ${gl_lv}/mnt/nginx${gl_bai}        ║
+║    - 多文件同步：${gl_zi}rsync.sh -f ${gl_hong}test.txt ${gl_huang}/backup/test.txt ${gl_lv}/mnt/test.txt${gl_bai} ║
 ╚══════════════════════════════════════════════════════════════════════╝
-\033[0m"
+${gl_bai}"
 
 #-------------- 模式识别 --------------
 SINGLE_FILE=false
 if [[ ${1:-} == "-f" ]]; then
-  SINGLE_FILE=true
-  shift
+    SINGLE_FILE=true
+    shift
 fi
 
 #-------------- 入参检查 --------------
 if [[ $# -lt 2 ]]; then
-  log "$RED" "用法1（目录）: $0 <源目录> <目标目录1> [目标目录2] ..."
-  log "$RED" "用法2（文件）: $0 -f <源文件> <目标文件1> [目标文件2] ..."
-  exit 1
+    log_error "用法1（多目录同步）: ${gl_zi}$0${gl_bai} <${gl_hong}源目录${gl_bai}> <${gl_huang}目标目录1${gl_bai}> [${gl_lv}目标目录2${gl_bai}] "
+    log_error "用法2（多文件同步）: ${gl_zi}$0 -f${gl_bai} <${gl_hong}源文件${gl_bai}> <${gl_huang}目标文件1${gl_bai}> [${gl_lv}目标文件2${gl_bai}] "
+    exit 1
 fi
 
 source_path="${1%/}"; shift
@@ -66,82 +77,100 @@ targets=("$@")
 
 #-------------- 源存在性检查 --------------
 if ! $SINGLE_FILE; then
-  log "$CYAN" "检查源目录是否存在..."
-  [[ -d $source_path ]] || { log "$RED" "源目录不存在：$source_path"; exit 1; }
-  log "$GREEN" "✓ 源目录存在：$source_path"
+    log_info "${gl_bai}检查源目录是否存在${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+    [[ -d $source_path ]] || { log_error "${gl_bai}源目录不存在：${gl_hong}$source_path${gl_bai}"; exit 1; }
+    log_ok "${gl_bai}源目录存在：${gl_huang}$source_path${gl_bai}"
 else
-  log "$CYAN" "检查源文件是否存在..."
-  [[ -f $source_path ]] || { log "$RED" "源文件不存在：$source_path"; exit 1; }
-  log "$GREEN" "✓ 源文件存在：$source_path"
+    log_info "${gl_bai}检查源文件是否存在${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+    [[ -f $source_path ]] || { log_error "${gl_bai}源文件不存在：${gl_hong}$source_path${gl_bai}"; exit 1; }
+    log_ok "${gl_bai}源文件存在：${gl_huang}$source_path${gl_bai}"
 fi
 
 #-------------- rsync 安装检查 --------------
-log "$CYAN" "检查 rsync 是否安装..."
+log_info "${gl_bai}检查 ${gl_huang}rsync${gl_bai} 是否安装${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
 if ! command -v rsync &>/dev/null; then
-  log "$YELLOW" "rsync 未安装，正在尝试自动安装..."
-  sudo apt-get update -qq && sudo apt-get install -y rsync || {
-    log "$RED" "rsync 安装失败，请手动安装后重试"; exit 1
-  }
+    log_warn "${gl_huang}rsync ${gl_bai}未安装，正在尝试自动安装${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+    sudo apt-get update -qq && sudo apt-get install -y rsync || {
+        log_error "${gl_huang}rsync${gl_bai} 安装失败，请手动安装后重试"; exit 1
+    }
 fi
-log "$GREEN" "✓ rsync 已就绪"
+log_ok "${gl_huang}rsync${gl_bai} 已就绪"
 
 #-------------- 同步函数 --------------
 sync_and_check(){
-  local tgt=$1; local idx=$2
-  local tgt_dir=$(dirname "$tgt")
+    local tgt=$1; local idx=$2
+    local tgt_dir=$(dirname "$tgt")
 
-  if [[ ! -d $tgt_dir ]]; then
-    log "$YELLOW" "目标目录不存在，正在创建：$tgt_dir"
-    mkdir -p "$tgt_dir" || { log "$RED" "创建失败：$tgt_dir"; return 1; }
-  fi
-
-  if $SINGLE_FILE; then
-    log "$PURPLE" "开始同步文件：$source_path  →  $tgt"
-    rsync -avh --progress "$source_path" "$tgt" 2>&1 | tee -a "$LOG_FILE"
-  else
-    log "$PURPLE" "开始同步目录：$source_path/  →  $tgt/"
-    rsync -avhzp --progress --no-links --delete "$source_path/" "$tgt/" 2>&1 | tee -a "$LOG_FILE"
-  fi
-  local st=${PIPESTATUS[0]}
-
-  if [[ $st -eq 0 ]]; then
-    if $SINGLE_FILE; then
-      log "$GREEN" "✓ 文件同步成功（目标$idx）"
-    else
-      local src_size=$(du -sb "$source_path" | awk '{print $1}')
-      local tgt_size=$(du -sb "$tgt"      | awk '{print $1}')
-      local comp=$(awk -v s=$src_size -v t=$tgt_size 'BEGIN{printf "%.2f",(t/s)*100}')
-      log "$GREEN" "✓ 目录同步成功（目标$idx）  完成度约 ${comp}%"
+    if [[ ! -d $tgt_dir ]]; then
+        log_warn "${gl_bai}目标目录不存在，正在创建：${gl_huang}$tgt_dir${gl_bai}"
+        mkdir -p "$tgt_dir" || { log_error "创建失败：$tgt_dir"; return 1; }
     fi
-  else
-    log "$RED"  "✗ 同步失败（目标$idx），请查看日志"
-  fi
+
+    if $SINGLE_FILE; then
+        log_warn "${gl_bai}开始同步文件：${gl_huang}$source_path${gl_bai}  →  ${gl_lv}$tgt${gl_bai}"
+        rsync -avh --progress "$source_path" "$tgt" 2>&1 | tee -a "$LOG_FILE"
+    else
+        log_warn "${gl_bai}开始同步目录：${gl_huang}$source_path/${gl_bai}  →  ${gl_lv}$tgt/${gl_bai}"
+        rsync -avhzp --progress --no-links --delete "$source_path/" "$tgt/" 2>&1 | tee -a "$LOG_FILE"
+    fi
+    local st=${PIPESTATUS[0]}
+
+    if [[ $st -eq 0 ]]; then
+        if $SINGLE_FILE; then
+            log_ok "${gl_bai}文件同步成功（目标${gl_huang}$idx${gl_bai}）"
+        else
+            local src_size=$(du -sb "$source_path" | awk '{print $1}')
+            local tgt_size=$(du -sb "$tgt"      | awk '{print $1}')
+            local comp=$(awk -v s=$src_size -v t=$tgt_size 'BEGIN{printf "%.2f",(t/s)*100}')
+            log_ok "${gl_bai}目录同步成功（目标${gl_huang}$idx${gl_bai}）  完成度约 ${gl_lv}${comp}${gl_bai}%"
+        fi
+    else
+        log_error "同步失败（目标${gl_huang}$idx${gl_bai}），请查看日志"
+    fi
 }
 
 #-------------- 主流程 --------------
 start_time=$(date '+%F %T'); start_ts=$(date +%s)
-log "$GREEN" "同步开始时间：$start_time"
+log_info "${gl_bai}同步开始时间：${gl_lv}$start_time${gl_bai}"
 
 for i in "${!targets[@]}"; do
-  log "$BLUE" "----------------------------------------"
-  sync_and_check "${targets[$i]}" "$((i+1))"
+    echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+    sync_and_check "${targets[$i]}" "$((i+1))"
 done
 
 end_time=$(date '+%F %T'); end_ts=$(date +%s)
 total=$((end_ts - start_ts))
 printf -v dur "%d时%02d分%02d秒" $((total/3600)) $(((total%3600)/60)) $((total%60))
 
-log "$BLUE"  "----------------------------------------"
-log "$WHITE" "同步结束时间：$end_time"
-log "$WHITE" "总用时：$dur"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+log_info "${gl_bai}同步结束时间：${gl_hong}$end_time${gl_bai}"
+log_info "总用时：${gl_lv}$dur${gl_bai}"
 if $SINGLE_FILE; then
-  log "$WHITE" "源文件：$source_path"
-  log "$WHITE" "目标文件列表："; printf '  %s\n' "${targets[@]}" | tee -a "$LOG_FILE"
+    echo -e "${gl_lan}[信息]${gl_bai} 源文件：${gl_huang}$source_path${gl_bai}"
+    echo -e "${gl_lan}[信息]${gl_bai} 目标文件列表："
+    for target in "${targets[@]}"; do
+        echo -e "${gl_lv}  ${target}${gl_bai}"
+    done
+
+    {
+      echo "[源文件] $source_path"
+      echo "[目标文件列表]"
+      printf '  %s\n' "${targets[@]}"
+    } >> "$LOG_FILE"
 else
-  log "$WHITE" "源目录：$source_path"
-  log "$WHITE" "目标目录列表："; printf '  %s\n' "${targets[@]}" | tee -a "$LOG_FILE"
+    echo -e "${gl_lan}[信息]${gl_bai} 源目录：${gl_huang}$source_path${gl_bai}"
+    echo -e "${gl_lan}[信息]${gl_bai} 目标目录列表："
+    for target in "${targets[@]}"; do
+        echo -e "${gl_lv}  ${target}${gl_bai}"
+    done
+
+    {
+      echo "[源目录] $source_path"
+      echo "[目标目录列表]"
+      printf '  %s\n' "${targets[@]}"
+    } >> "$LOG_FILE"
 fi
-log "$CYAN"  "----------------------------------------"
-log "$GREEN" "完整日志已保存至：$LOG_FILE"
-log "$WHITE" "============================================="
-{ echo "========== rsync.sh 结束：$(date '+%F %T') =========="; echo ""; } >> "$LOG_FILE"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+log_ok "完整日志已保存至：${gl_huang}$LOG_FILE${gl_bai}"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+{ echo "========== rsync.sh 结束：$end_time =========="; echo ""; } >> "$LOG_FILE"

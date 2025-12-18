@@ -54,6 +54,11 @@ show_menu() {
     echo -e "${gl_zi}>>> Git 项目管理脚本${gl_bai}"
     echo -e "当前工作目录: ${gl_huang}$(pwd)${gl_bai}"
     echo -e "${gl_bufan}------------------------${gl_bai}"
+    if [[ ! -d .git ]]; then
+        log_error "当前目录不是 Git 仓库，请进入正确的 Git 仓库目录后重试。"
+    fi
+    ls --color=auto -x
+    echo -e "${gl_bufan}------------------------${gl_bai}"
     echo -e "${gl_bufan} 1. ${gl_bai}拉取当前仓库更新"
     echo -e "${gl_bufan} 2. ${gl_bai}提交并推送当前仓库更改"
     echo -e "${gl_bufan} 3. ${gl_bai}更改当前仓库标签"
@@ -197,6 +202,7 @@ git_clone_all_menu() {
             name=$(basename "${repo[$i]}" .git)
             echo -e "${gl_lv}$i. 克隆仓库：$name${gl_bai}"
         done
+        ls --color=auto -xa
         echo -e "${gl_bufan}------------------------${gl_bai}"
         echo -e "${gl_huang}88. ${gl_bai}克隆新的仓库"
         echo -e "${gl_huang}99. ${gl_bai}克隆所有仓库"
@@ -279,12 +285,12 @@ git_clone_new() {
 
 exit_script() {
     clear
-    echo -e "\r${gl_hong}感谢使用，再见！ ${gl_zi}2${gl_hong} 秒后自动退出${gl_bai}"
-    sleep 1
-    echo -e "\r${gl_huang}感谢使用，再见！ ${gl_zi}1${gl_huang} 秒后自动退出${gl_bai}"
-    sleep 1
-    echo -e "\r${gl_lv}感谢使用，再见！ ${gl_zi}0${gl_lv} 秒后自动退出${gl_bai}"
-    sleep 0.5
+    # echo -e "\r${gl_hong}感谢使用，再见！ ${gl_zi}2${gl_hong} 秒后自动退出${gl_bai}"
+    # sleep 1
+    # echo -e "\r${gl_huang}感谢使用，再见！ ${gl_zi}1${gl_huang} 秒后自动退出${gl_bai}"
+    # sleep 1
+    # echo -e "\r${gl_lv}感谢使用，再见！ ${gl_zi}0${gl_lv} 秒后自动退出${gl_bai}"
+    # sleep 0.5
     exit 0
 }
 

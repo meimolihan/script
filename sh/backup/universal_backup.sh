@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bash
 # =============================================
 # 通用目录备份脚本（免交互版本）
 # 版本: 2.1
@@ -8,37 +8,42 @@
 set -euo pipefail
 
 #-------------- 颜色定义 --------------
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-BLUE='\033[0;34m'; PURPLE='\033[0;35m'; CYAN='\033[0;36m'
-WHITE='\033[1;37m'; NC='\033[0m'
+gl_hui='\e[37m'
+gl_hong='\033[31m'
+gl_lv='\033[32m'
+gl_huang='\033[33m'
+gl_lan='\033[34m'
+gl_zi='\033[35m'
+gl_bufan='\033[96m'
+gl_bai='\033[0m'
 
 #-------------- 日志函数 --------------
-log(){
-  local color=$1; shift
-  echo -e "${color}${*}${NC}"
-}
+log_info()  { echo -e "${gl_lan}[信息]${gl_bai} $*"; }
+log_ok()    { echo -e "${gl_lv}[成功]${gl_bai} $*"; }
+log_warn()  { echo -e "${gl_huang}[警告]${gl_bai} $*"; }
+log_error() { echo -e "${gl_hong}[错误]${gl_bai} $*" >&2; }
 
 #-------------- 横幅 --------------
-echo -e "\033[1;36m
+echo -e "${gl_bai}
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║        通用目录备份脚本（免交互版本） \033[1;33m★ v2.2 ★\033[1;36m                               ║
+║        通用目录备份脚本（免交互版本） ${gl_huang}★ v2.2 ★${gl_bai}                               ║
 ║        自动保留指定数量 · 彩色日志 · 完全免交互                              ║
-║        脚本功能:                                                             ║
+║        ${gl_huang}脚本功能:${gl_bai}                                                             ║
 ║           - 备份指定源目录                                                   ║
-║           - 自动保留指定数量的备份文件（默认3个）                            ║
+║           - 自动保留指定数量的备份文件（${gl_huang}默认3个${gl_bai}）                            ║
 ║           - 生成带时间戳的备份文件                                           ║
 ║           - 完全免交互，适合自动化任务                                       ║
 ║                                                                              ║
-║        使用方法: bash universal_backup.sh <源目录> <备份目录> [保留备份数量] ║
-║        使用示例: bash universal_backup.sh /path/to/source /path/to/backup 5  ║
+║        使用方法: ${gl_zi}bash universal_backup.sh${gl_bai} <${gl_hong}源目录${gl_bai}> <${gl_huang}备份目录${gl_bai}> [${gl_lv}保留备份数量${gl_bai}] ║
+║        使用示例: ${gl_zi}bash universal_backup.sh ${gl_hong}/path/to/source${gl_bai} ${gl_huang}/path/to/backup${gl_bai} ${gl_lv}5${gl_bai}  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
-\033[0m"
+${gl_bai}"
 
 # 检查参数数量
 if [ $# -lt 2 ]; then
-    log "$RED" "错误：必须指定源目录和备份目录"
-    log "$WHITE" "使用方法: $0 <源目录> <备份目录> [保留备份数量]"
-    log "$WHITE" "示例: $0 /path/to/source /path/to/backup 5"
+    log_error "必须指定源目录和备份目录"
+    log_info "使用方法: ${gl_zi}$0${gl_bai} <${gl_hong}源目录${gl_bai}> <${gl_huang}备份目录${gl_bai}> [${gl_lv}保留备份数量${gl_bai}]"
+    log_info "示例: ${gl_zi}$0${gl_bai} ${gl_hong}/path/to/source${gl_bai} ${gl_huang}/path/to/backup${gl_bai} ${gl_lv}5${gl_bai}"
     exit 1
 fi
 
@@ -54,48 +59,49 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # 验证源目录是否存在
 if [ ! -d "$BACKUP_SRC_DIR" ]; then
-    log "$RED" "错误：源目录 '$BACKUP_SRC_DIR' 不存在！"
+    log_error "源目录 '$BACKUP_SRC_DIR' 不存在！"
     exit 1
 fi
 
 # 创建备份目录（如果不存在）
-log "$CYAN" "创建备份目录..."
+log_info "${gl_bai}创建备份目录${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
 mkdir -p "$BACKUP_DEST"
 
 if [ $? -ne 0 ]; then
-    log "$RED" "错误：无法创建备份目录 '$BACKUP_DEST'，请检查权限！"
+    log_error "无法创建备份目录 '$BACKUP_DEST'，请检查权限！"
     exit 1
 fi
 
 # 验证备份目录是否可写
 if [ ! -w "$BACKUP_DEST" ]; then
-    log "$RED" "错误：没有写权限到备份目录 '$BACKUP_DEST'！"
+    log_error "没有写权限到备份目录 '$BACKUP_DEST'！"
     exit 1
 fi
 
-log "$BLUE"  "源目录: $BACKUP_SRC_DIR"
-log "$BLUE"  "备份目录: $BACKUP_DEST"
-log "$BLUE"  "保留备份数量: $KEEP_COUNT"
-log "$BLUE"  "备份前缀: $BACKUP_PREFIX"
-log "$CYAN" "----------------------------------------"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+log_info "${gl_bai}源目录: ${gl_huang}$BACKUP_SRC_DIR${gl_bai}"
+log_info "${gl_bai}备份目录: ${gl_lv}$BACKUP_DEST${gl_bai}"
+log_info "${gl_bai}保留备份数量: ${gl_huang}$KEEP_COUNT${gl_bai}"
+log_info "${gl_bai}备份前缀: ${gl_huang}$BACKUP_PREFIX${gl_bai}"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
 
 # 执行备份
 BACKUP_FILE="${BACKUP_DEST}/${BACKUP_PREFIX}_${TIMESTAMP}.tar.gz"
-log "$PURPLE" "正在创建备份文件: $(basename "$BACKUP_FILE")"
+log_warn "${gl_bai}正在创建备份文件: ${gl_huang}$(basename "$BACKUP_FILE")${gl_bai}"
 tar -czf "$BACKUP_FILE" -C "$(dirname "$BACKUP_SRC_DIR")" "$(basename "$BACKUP_SRC_DIR")"
 
 # 检查备份是否成功
 if [ $? -eq 0 ]; then
-    log "$GREEN" "✓ 备份成功完成: $(basename "$BACKUP_FILE")"
-    log "$GREEN" "备份大小: $(du -h "$BACKUP_FILE" | cut -f1)"
+    log_ok "${gl_bai}备份成功完成: ${gl_lv}$(basename "$BACKUP_FILE")${gl_bai}"
+    log_ok "${gl_bai}备份大小: ${gl_lv}$(du -h "$BACKUP_FILE" | cut -f1)${gl_bai}"
 else
-    log "$RED" "✗ 备份失败，请检查错误信息"
+    log_error "备份失败，请检查错误信息"
     exit 1
 fi
 
-log "$CYAN" "----------------------------------------"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
 # 删除旧备份，仅保留指定数量的最新文件
-log "$YELLOW" "清理旧备份文件..."
+log_warn "${gl_bai}清理旧备份文件${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
 cd "$BACKUP_DEST" || exit
 
 # 获取所有匹配的备份文件并按时间排序（最新的在前）
@@ -107,22 +113,22 @@ FILE_COUNT=${#BACKUP_FILES[@]}
 if [ $FILE_COUNT -gt $KEEP_COUNT ]; then
     # 删除超出保留数量的最旧文件
     for ((i = $KEEP_COUNT; i < $FILE_COUNT; i++)); do
-        log "$YELLOW" "删除旧备份: ${BACKUP_FILES[i]}"
+        log_warn "${gl_bai}删除旧备份: ${gl_huang}${BACKUP_FILES[i]}${gl_bai}"
         rm -f "${BACKUP_FILES[i]}"
     done
-    log "$GREEN" "已删除 $(($FILE_COUNT - $KEEP_COUNT)) 个旧备份文件"
+    log_ok "${gl_bai}已删除 ${gl_huang}$(($FILE_COUNT - $KEEP_COUNT)) ${gl_bai}个旧备份文件"
 fi
 
 # 显示当前备份文件列表
-log "$CYAN" "----------------------------------------"
-log "$WHITE" "当前备份文件列表:"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+log_info "当前备份文件列表:"
 ls -1t ${BACKUP_PREFIX}_*.tar.gz 2>/dev/null | head -n $KEEP_COUNT | while read -r file; do
     size=$(du -h "$file" | cut -f1)
     date=$(date -r "$file" "+%Y-%m-%d %H:%M:%S")
-    echo -e "  ${WHITE}- $file ($size, 创建于: $date)${NC}"
+    echo -e "  ${gl_zi}•${gl_bai} ${gl_hui}$file${gl_bai}  ${gl_huang}($size)${gl_bai}  ${gl_bufan}$date${gl_bai}"
 done
 
-log "$CYAN" "----------------------------------------"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"
 CURRENT_COUNT=$(ls -1 ${BACKUP_PREFIX}_*.tar.gz 2>/dev/null | wc -l)
-log "$GREEN" "备份完成! 总共保留 $CURRENT_COUNT 个备份文件"
-log "$WHITE" "============================================="
+log_ok "备份完成! 总共保留 ${gl_lv}$CURRENT_COUNT${gl_bai} 个备份文件"
+echo -e "${gl_bufan}----------------------------------------${gl_bai}"

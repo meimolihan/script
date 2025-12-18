@@ -41,8 +41,8 @@ handle_invalid_input() {
 # -------------- 按任意键继续 --------------
 break_end() {
     echo -e "${gl_lv}操作完成${gl_bai}"
-    echo "按任意键继续..."
-    read -r -n 1 -s -p ""
+    echo -e "${gl_bai}按任意键继续${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai} \c"
+    read -r -n 1 -s -r -p ""
     echo ""
     clear
 }
@@ -62,11 +62,10 @@ exit_script() {
 
 # -------------- 欢迎信息 --------------
 show_welcome() {
-    echo -e "${gl_bufan}"
-    echo "=============================================="
-    echo "      通用 Linux SSH 服务配置 v2.5.2 脚本"
-    echo "=============================================="
-    echo -e "${gl_bai}"
+    clear
+    echo -e ""
+    echo -e "${gl_zi}>>> 配置 SSH 服务${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
     log_info "脚本功能:"
     echo "  • 自动检测 Linux 发行版并安装 SSH 服务"
     echo "  • 配置 SSH 基本参数和优化设置"
@@ -91,27 +90,16 @@ show_welcome() {
     echo "  • 限制可登录的用户和IP范围"
     echo "  • 考虑安装 Fail2Ban 防止暴力破解"
     echo -e "${gl_bufan}=============================================="
-    echo -e "${gl_bai}"
+    break_end
 }
 
-# -------------- 确认继续 --------------
-confirm_continue() {
-    echo -e "${gl_huang}"
-    read -rep $'回车继续，n/N 退出: ' -n 1 -r
-    echo -e "${gl_bai}"
-    case "${REPLY,,}" in
-        n|no) log_info "已取消执行脚本。"; exit 0 ;;
-        *)    echo ;;
-    esac
-}
 
 # -------------- 交互输入端口 --------------
 ask_ssh_port() {
     clear
     echo ""
-    echo -e "${gl_zi}>>> 配置 SSH 服务${gl_bai}"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
-    echo ""
+    echo -e "${gl_huang}>>> 配置 SSH 端口${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 
     local port_input
     while true; do
@@ -191,31 +179,55 @@ install_ssh() {
     log_ok "SSH 服务安装完成"
 }
 
-# -------------- 配置 SSH --------------
+# -------------- 关键配置缺省值表 --------------
+# 先占位，等 ask_ssh_port 后再填值
+declare -A SSH_DEF
+
+# -------------- 配置 SSH（自动补写缺省值） --------------
 configure_ssh() {
     log_info "开始配置 SSH 服务..."
     [ -f /etc/ssh/sshd_config ] && \
         cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup.$(date +%Y%m%d%H%M%S)
 
-    sed -i \
-        -e '/^[[:space:]]*#[[:space:]]*.*PermitRootLogin[[:space:]]prohibit-password/d' \
-        -e "s/^#*Port .*/Port $SSH_PORT/" \
-        -e 's/^#*PermitRootLogin .*/PermitRootLogin yes/' \
-        -e 's/^#*GSSAPIAuthentication .*/GSSAPIAuthentication no/' \
-        -e 's/^#*PrintMotd.*/PrintMotd no/' \
-        -e 's/^#*PrintLastLog.*/PrintLastLog no/' \
-        -e 's/^#*TCPKeepAlive.*/TCPKeepAlive no/' \
-        -e 's/^#*Compression .*/Compression delayed/' \
-        -e 's/^#*ClientAliveInterval .*/ClientAliveInterval 30/' \
-        -e 's/^#*ClientAliveCountMax .*/ClientAliveCountMax 120/' \
-        -e 's/^#*UseDNS .*/UseDNS no/' \
-        /etc/ssh/sshd_config
+    # 确保 SSH_PORT 已赋值
+    SSH_DEF=(
+        ["Port"]="$SSH_PORT"
+        ["PermitRootLogin"]="yes"
+        ["GSSAPIAuthentication"]="no"
+        ["PrintMotd"]="no"
+        ["PrintLastLog"]="no"
+        ["TCPKeepAlive"]="no"
+        ["Compression"]="delayed"
+        ["ClientAliveInterval"]="30"
+        ["ClientAliveCountMax"]="120"
+        ["UseDNS"]="no"
+        ["X11Forwarding"]="no"
+    )
 
-    grep -q '^X11Forwarding no$' /etc/ssh/sshd_config || {
-        sed -i '/^[[:space:]]*#*[[:space:]]*X11Forwarding[[:space:]]/d' /etc/ssh/sshd_config
-        echo 'X11Forwarding no' >> /etc/ssh/sshd_config
-    }
-    log_ok "SSH 配置完成"
+    # 1. 备份（时间戳精确到秒，避免重复跑脚本时覆盖）
+    cp /etc/ssh/sshd_config "/etc/ssh/sshd_config.bak.$(date +%Y%m%d_%H%M%S)"
+
+    # 2. 删除空行（包括只含空格/Tab 的空行）
+    sed -i '/^[[:space:]]*$/d' /etc/ssh/sshd_config
+
+    # 3. 删除纯注释行（# 可以出现在行首或在任意空白之后）
+    sed -i '/^[[:space:]]*#/d' /etc/ssh/sshd_config
+
+    # 1. 先删掉所有“相同关键词”的已注释/未注释行，防止重复
+    for key in "${!SSH_DEF[@]}"; do
+        sed -i "/^[[:space:]]*#*[[:space:]]*$key[[:space:]]/d" /etc/ssh/sshd_config
+    done
+
+    sed -i "/[[:space:]]*自动补写缺省值/d" /etc/ssh/sshd_config
+
+    # 2. 追加缺省值
+    echo "" >> /etc/ssh/sshd_config
+    echo "# ==== 自动补写缺省值 $(date +%F' '%T) ====" >> /etc/ssh/sshd_config
+    for key in "${!SSH_DEF[@]}"; do
+        printf "%-25s %s\n" "$key" "${SSH_DEF[$key]}" >> /etc/ssh/sshd_config
+    done
+
+    log_ok "SSH 配置已更新/补全"
 }
 
 # -------------- 配置防火墙 --------------
@@ -241,9 +253,9 @@ configure_firewall() {
 # -------------- 修改 root 密码 --------------
 ask_root_password() {
     echo ""
-    echo -e "${gl_bufan}修改 root 密码${gl_bai}"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
-    read -r -e -p "$(echo -e "${gl_bai}修改 root 密码？(${gl_huang}y${gl_hong}/${gl_huang}Y${gl_bai}修改，回车跳过): ")" -re ans
+    echo -e "${gl_huang}>>> 修改 root 密码${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
+    read -r -e -p "$(echo -e "${gl_bai}修改 root 密码？(${gl_lv}Y${gl_hong}/${gl_huang}n${gl_bai} 回车跳过): ")" -re ans
     echo -e "${gl_bai}"
     case "${ans,,}" in
         y|yes)
@@ -265,50 +277,49 @@ ask_root_password() {
 
 # -------------- 启动 SSH 服务 --------------
 start_ssh_service() {
-    log_info "启动 SSH 服务..."
+    log_info "启动/重启 SSH 服务..."
     case $OS in
         debian|ubuntu|linuxmint|opensuse*|suse*|arch|manjaro)
-            systemctl enable --now ssh
-            systemctl status ssh --no-pager
+            systemctl enable ssh
+            systemctl restart ssh
+            systemctl status ssh --no-pager -l
             ;;
         centos|rhel|fedora|rocky|almalinux)
-            systemctl enable --now sshd
-            systemctl status sshd --no-pager
+            systemctl enable sshd
+            systemctl restart sshd
+            systemctl status sshd --no-pager -l
             ;;
         *)
             log_error "不支持的发行版: $OS"; exit 1
             ;;
     esac
-    log_ok "SSH 服务已启动"
+    log_ok "SSH 服务已重启并生效"
 }
 
 # -------------- 回显关键配置 --------------
 show_ssh_changes() {
     echo ""
-    log_info "以下是 sshd_config 中本次脚本涉及的关键配置："
-    echo -e "${gl_bufan}------------------------------------------------${gl_bai}"
+    echo -e "${gl_huang}>>> 本次脚本涉及的关键配置："
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
     grep -E '^(Port|PermitRootLogin|GSSAPIAuthentication|UseDNS|Compression|ClientAliveInterval|ClientAliveCountMax|TCPKeepAlive|PrintMotd|PrintLastLog|X11Forwarding)[[:space:]]' /etc/ssh/sshd_config
-    echo -e "${gl_bufan}------------------------------------------------${gl_bai}"
 }
 
 # -------------- 连接信息 --------------
 show_connection_info() {
     local ip=$(hostname -I | awk '{print $1}')
     echo ""
-    echo -e "${gl_bufan}=============================================="
-    echo -e "           SSH 服务配置完成!"
-    echo -e "==============================================${gl_bai}"
-    log_info "连接信息:"
-    echo -e "  服务器IP: ${gl_lan}$ip${gl_bai}"
-    echo -e "  SSH 端口: ${gl_lan}$SSH_PORT${gl_bai}"
-    echo -e "  连接命令: ${gl_lan}ssh -p $SSH_PORT root@$ip${gl_bai}"
-    echo -e "${gl_bufan}==============================================${gl_bai}"
+    echo -e "${gl_huang}>>> 连接信息："
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
+    echo -e "  配置文件: ${gl_lv}/etc/ssh/sshd_config${gl_bai}"
+    echo -e "  服务器IP: ${gl_lv}$ip${gl_bai}"
+    echo -e "  SSH 端口: ${gl_lv}$SSH_PORT${gl_bai}"
+    echo -e "  连接命令: ${gl_lv}ssh -p $SSH_PORT root@$ip${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 }
 
 # -------------- 主入口 --------------
 main() {
     show_welcome
-    confirm_continue
     [ "$(id -u)" -ne 0 ] && { log_error "请使用 root 运行本脚本"; exit 1; }
 
     ask_ssh_port

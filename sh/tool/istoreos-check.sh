@@ -1,5 +1,5 @@
 #!/bin/bash
-sh_v="1.1.1"
+sh_v="1.1.2"
 
 # —— 个人颜色定义 ——
 gl_hui='\e[37m'
@@ -49,7 +49,7 @@ mobufan_sh_update() {
         # 输出对齐的两列
         echo -e "${current_text}$(printf '%*s' $pad_col1_1)    ${latest_text}${gl_bai}"
         echo -e "${input_text}$(printf '%*s' $pad_col1_2)    ${update_text}${gl_bai}"
-        echo -e "${gl_bufan}------------------------${gl_bai}"
+        echo -e "${gl_bufan}————————————————————————${gl_bai}"
     fi
 }
 # =====================================
@@ -60,7 +60,7 @@ show_system_info() {
 
     # 📊 获取系统信息函数
     get_local_ip() {
-        ip -o -4 addr show scope global 2>/dev/null | awk '{print $4}' | cut -d'/' -f1 | head -n1 || echo "无法获取你想要的信息！"
+        ifconfig br-lan | awk -F '[ :]+' '/inet addr/{print $4}'
     }
 
     get_cpu_usage() {
@@ -104,19 +104,19 @@ show_system_info() {
     clear
     echo -e ""
     echo -e "${gl_zi}>>> 系统信息${gl_bai}"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————${gl_bai}"
     echo -e "${gl_bufan}主机名称 : ${gl_bai}$(cat /proc/sys/kernel/hostname 2>/dev/null || echo "Unknown")"
     echo -e "${gl_bufan}内核版本 : ${gl_bai}$(uname -r)"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————${gl_bai}"
     echo -e "${gl_bufan}CPU 架构 : ${gl_bai}$(uname -m)"
     echo -e "${gl_bufan}CPU 占用 : ${gl_bai}$(get_cpu_usage)"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————${gl_bai}"
     echo -e "${gl_bufan}IPV4内网 : ${gl_bai}$(get_local_ip)"
     echo -e "${gl_bufan}默认网关 : ${gl_bai}$(get_default_gateway)"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————${gl_bai}"
     echo -e "${gl_bufan}磁盘占用 : ${gl_bai}$(get_disk_usage)"
     echo -e "${gl_bufan}运行时间 : ${gl_bai}$(get_uptime)"
-    echo -e "${gl_bufan}------------------------${gl_bai}"
+    echo -e "${gl_bufan}————————————————————————${gl_bai}"
 }
 
 # 更新脚本函数

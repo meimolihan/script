@@ -133,7 +133,7 @@ safe_url_input() {
 # ========== 预设端口表 ==========
 declare -A PRESET_PORTS=(
     [transmission]=9091 [halo]=8090 [emby]=8896 [fntv-302]=8095 [md]=9900
-    [xiaomusic]=8393 [metube]=8081 [random-pic-api]=8588 [easynode]=8082
+    [xiaomusic]=58090 [metube]=8081 [random-pic-api]=8588 [easynode]=8082
     [allinssl]=7979 [ittools]=8088 [sun-panel]=3002 [sun-panel-helper]=33002
     [openlist]=5244 [taosync]=8023 [xunlei]=2345 [qbittorrent]=8080
     [musicn]=7478 [dufs]=5000 [nastools]=3000 [jackett]=9117
@@ -141,23 +141,22 @@ declare -A PRESET_PORTS=(
     [pansou]=8110 [panhub]=3020 [mind-map]=8256 [easyvoice]=3780
     [dpanel]=8807 [kspeeder]=5003 [speedtest]=7878 [navidrome]=4533
     [uptime-kuma]=3001 [chinesesubfinder]=19035 [nginx-file]=18080
-    [bbbb]=3777
+    [vert]=8880 [beszel]=8298
 )
 
-# 显示欢迎信息
+
 clear
 echo ""
-echo -e "${gl_zi}>>> Nginx 配置生成脚本${gl_bai}"
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_huang}>>> 安装/下载依赖文件中${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 
 install wget
 install nginx
+install rsync
 echo ""
 
-echo -e "${gl_bufan}------------------------${gl_bai}"
-
 # ========== 下载依赖（存在则跳过） ==========
-mkdir -p /etc/nginx/html/error/test-xxx_error /etc/nginx/html/help/test-xxx_help
+mkdir -pm 755 /etc/nginx/html/error/test-xxx_error /etc/nginx/html/help/test-xxx_help
 
 # 错误页依赖
 for f in index.html favicon.ico; do
@@ -166,7 +165,7 @@ for f in index.html favicon.ico; do
              -O "/etc/nginx/html/error/test-xxx_error/$f"
         echo -e "${gl_lv}✓ ${gl_bai}错误页 ${gl_huang}/etc/nginx/html/error/test-xxx_error/$f ${gl_lv}已下载${gl_bai}"
     else
-        echo -e "${gl_hui}○ ${gl_bai}错误页 ${gl_huang}/etc/nginx/html/error/test-xxx_error/$f ${gl_bai}已存在，${gl_huang}跳过${gl_bai}"
+        echo -e "${gl_lv}○ ${gl_bai}错误页 ${gl_huang}/etc/nginx/html/error/test-xxx_error/$f ${gl_bai}已存在，${gl_huang}跳过${gl_bai}"
     fi
 done
 
@@ -177,13 +176,16 @@ for f in index.html favicon.ico; do
              -O "/etc/nginx/html/help/test-xxx_help/$f"
         echo -e "${gl_lv}✓ ${gl_bai}帮助页 ${gl_huang}/etc/nginx/html/help/test-xxx_help/$f ${gl_lv}已下载${gl_bai}"
     else
-        echo -e "${gl_hui}○ ${gl_bai}帮助页 ${gl_huang}/etc/nginx/html/help/test-xxx_help/$f ${gl_bai}已存在，${gl_huang}跳过${gl_bai}"
+        echo -e "${gl_lv}○ ${gl_bai}帮助页 ${gl_huang}/etc/nginx/html/help/test-xxx_help/$f ${gl_bai}已存在，${gl_huang}跳过${gl_bai}"
     fi
 done
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
+
 echo ""
+echo -e "${gl_zi}>>> Nginx 配置生成中${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
 
 # ========== 1. 服务名称配置 ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}1${gl_hong}/${gl_huang}9${gl_bai}): 服务名称配置"
 read -r -e -p "$(echo -e "${gl_bai}请输入服务名称（默认名称 ${gl_huang}aaaa${gl_bai}) : ")" SVC_NAME
 SVC_NAME=${SVC_NAME:-aaaa}
@@ -191,7 +193,7 @@ echo -e "${gl_lv}✓ ${gl_bai}服务名称: ${gl_lv}$SVC_NAME${gl_bai}"
 echo ""
 
 # ========== 2. 子域名前缀 ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}2${gl_hong}/${gl_huang}9${gl_bai}): 域名配置"
 read -r -e -p "$(echo -e "${gl_bai}请输入域名前缀（默认前缀 ${gl_huang}${SVC_NAME}${gl_bai}) : ")" SUB_DOM
 SUB_DOM=${SUB_DOM:-$SVC_NAME}
@@ -200,7 +202,7 @@ echo -e "${gl_lv}✓ ${gl_bai}当前域名: ${gl_lv}$DOMAIN${gl_bai}"
 echo ""
 
 # ========== 3. 后端服务配置 ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}3${gl_hong}/${gl_huang}9${gl_bai}): 后端服务配置"
 read -r -e -p "$(echo -e "${gl_bai}请输入后端 IP（默认地址 ${gl_huang}10.10.10.251${gl_bai}) : ")" BACKEND_IP
 BACKEND_IP=${BACKEND_IP:-10.10.10.251}
@@ -208,14 +210,14 @@ echo -e "${gl_lv}✓ ${gl_bai}后端 IP: ${gl_lv}$BACKEND_IP${gl_bai}"
 echo ""
 
 # ========== 4. 后端端口配置 ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}4${gl_hong}/${gl_huang}9${gl_bai}): 后端端口配置"
 BACKEND_PORT=$(smart_port_input "$SVC_NAME")
 echo -e "${gl_lv}✓ ${gl_bai}后端端口: ${gl_lv}$BACKEND_PORT${gl_bai}"
 echo ""
 
 # ========== 5. 生成 Nginx 配置文件（按域名命名） ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}5${gl_hong}/${gl_huang}9${gl_bai}): 生成 Nginx 配置文件"
 CONF_FILE="/etc/nginx/conf.d/${DOMAIN}.conf"
 
@@ -272,10 +274,9 @@ server {
     }
 
     # 说明页面
-    location ^~ /h {
-        alias /etc/nginx/html/help/${SVC_NAME}_help;
-        index index.html;
-        try_files \$uri \$uri/ =404;
+    location = /h {
+        alias /etc/nginx/html/help/allinssl_help;
+        try_files /index.html =404;
         access_log off;
     }
 }
@@ -285,7 +286,7 @@ echo -e "${gl_lv}✓ ${gl_bai}已生成配置文件：${gl_lv}${CONF_FILE}${gl_b
 echo ""
 
 # ========== 6. 创建日志目录 ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}6${gl_hong}/${gl_huang}9${gl_bai}): 创建日志目录"
 LOG_DIR="/etc/nginx/log/mobufan.eu.org"
 sudo mkdir -p "$LOG_DIR" || { echo -e "${gl_hong}✗ 创建日志目录失败！${gl_bai}"; exit 1; }
@@ -300,7 +301,7 @@ printf '%b✓ %b日志目录已创建/授权：%b%s （user: %s）%b\n' "$gl_lv"
 echo ""
 
 # ========== 7. 复制并替换说明/错误页面模板（含成功提示） ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}7${gl_hong}/${gl_huang}9${gl_bai}): 生成帮助和错误页面"
 HELP_SRC="/etc/nginx/html/help/test-xxx_help"
 HELP_DST="/etc/nginx/html/help/${SVC_NAME}_help"
@@ -364,7 +365,7 @@ fi
 echo ""
 
 # ========== 8. 修改帮助文档 URL（可选） ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}8${gl_hong}/${gl_huang}9${gl_bai}): 修改帮助文档 URL（按回车跳过设置）"
 read -r -e -p "$(echo -e "${gl_bai}请输入 ${gl_huang}Hexo${gl_bai} 地址: ")" HEXO_URL
 read -r -e -p "$(echo -e "${gl_bai}请输入 ${gl_huang}Hugo${gl_bai} 地址: ")" HUGO_URL  
@@ -379,7 +380,7 @@ fi
 echo ""
 
 # ========== 9. 检查 Nginx 语法并重载 ==========
-echo -e "${gl_bufan}------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}9${gl_hong}/${gl_huang}9${gl_bai}): 检查 Nginx 语法并重载服务"
 
 if sudo nginx -t; then

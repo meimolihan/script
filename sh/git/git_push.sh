@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# 检查当前目录是否为 Git 仓库
+if [[ ! -d .git ]]; then
+    echo "当前目录不是 Git 仓库，请进入正确的 Git 仓库目录后重试。"
+    exit 1
+fi
+
 # 脚本名称: deploy.sh
 # 用途: 自动化部署 random-pic-api 到远程仓库
 # 使用方法: 在目标目录下运行脚本
