@@ -52,55 +52,34 @@ exit_script() {
     clear
     echo -ne "\r${gl_hong}感谢使用，再见！ ${gl_zi}2${gl_hong} 秒后自动退出${gl_bai}"
     sleep 1
-    echo -ne "\r${gl_huang}感谢使用，再见！ ${gl_zi}1${gl_huang} 秒后自动退出${gl_bai}"
-    sleep 1
     echo -e "\r${gl_lv}感谢使用，再见！ ${gl_zi}0${gl_lv} 秒后自动退出${gl_bai}"
     sleep 0.5
     clear
     exit 0
 }
 
-# -------------- 欢迎信息 --------------
-show_welcome() {
+# -------------- 交互输入端口 --------------
+ask_ssh_port() {
     clear
-    echo -e ""
-    echo -e "${gl_zi}>>> 配置 SSH 服务${gl_bai}"
+    echo -e "${gl_huang}>>> 配置 SSH 服务${gl_bai}"
     echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
     log_info "脚本功能:"
     echo "  • 自动检测 Linux 发行版并安装 SSH 服务"
     echo "  • 配置 SSH 基本参数和优化设置"
     echo "  • 配置防火墙允许 SSH 连接"
     echo "  • 启动并启用 SSH 服务"
-    echo ""
     log_info "支持的系统:"
     echo "  • Debian 及其衍生版 (Ubuntu, Proxmox VE, FnOS)"
     echo "  • Red Hat 系 (CentOS, RHEL, Fedora, Rocky Linux)"
     echo "  • SUSE 系 (OpenSUSE, SUSE Linux Enterprise)"
-    echo "  • Arch Linux 及其衍生版"
-    echo ""
     log_warn "注意:"
     echo "  • 此脚本需要 root 权限运行"
     echo "  • 脚本会修改 SSH 配置并开放防火墙"
     echo "  • 默认配置允许 root 登录，建议后续修改为更安全的设置"
-    echo ""
-    log_warn "安全建议:"
-    echo "  • 更改默认 SSH 端口"
-    echo "  • 禁用 root 登录并使用普通用户"
-    echo "  • 使用密钥认证替代密码认证"
-    echo "  • 限制可登录的用户和IP范围"
-    echo "  • 考虑安装 Fail2Ban 防止暴力破解"
-    echo -e "${gl_bufan}=============================================="
-    break_end
-}
-
-
-# -------------- 交互输入端口 --------------
-ask_ssh_port() {
-    clear
+    echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
     echo ""
     echo -e "${gl_huang}>>> 配置 SSH 端口${gl_bai}"
     echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
-
     local port_input
     while true; do
         read -r -e -p "$(echo -e "${gl_bai}请输入 SSH 端口 (回车默认 ${gl_huang}22${gl_bai}): ")" port_input
@@ -122,7 +101,7 @@ ask_ssh_port() {
 
 # -------------- 检测发行版 --------------
 detect_os() {
-    log_info "检测操作系统..."
+    log_info "检测操作系统${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$ID
@@ -153,7 +132,7 @@ detect_os() {
 
 # -------------- 安装 SSH --------------
 install_ssh() {
-    log_info "开始安装 SSH 服务..."
+    log_info "开始安装 SSH 服务${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
     case $OS in
         debian|ubuntu|linuxmint)
             apt-get update -qq
@@ -185,7 +164,7 @@ declare -A SSH_DEF
 
 # -------------- 配置 SSH（自动补写缺省值） --------------
 configure_ssh() {
-    log_info "开始配置 SSH 服务..."
+    log_info "开始配置 SSH 服务${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
     [ -f /etc/ssh/sshd_config ] && \
         cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup.$(date +%Y%m%d%H%M%S)
 
@@ -232,7 +211,7 @@ configure_ssh() {
 
 # -------------- 配置防火墙 --------------
 configure_firewall() {
-    log_info "开始配置防火墙..."
+    log_info "开始配置防火墙${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
     if command -v ufw >/dev/null 2>&1; then
         ufw allow "$SSH_PORT"/tcp
         echo "y" | ufw enable
@@ -277,7 +256,7 @@ ask_root_password() {
 
 # -------------- 启动 SSH 服务 --------------
 start_ssh_service() {
-    log_info "启动/重启 SSH 服务..."
+    log_info "启动/重启 SSH 服务${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
     case $OS in
         debian|ubuntu|linuxmint|opensuse*|suse*|arch|manjaro)
             systemctl enable ssh
@@ -319,7 +298,6 @@ show_connection_info() {
 
 # -------------- 主入口 --------------
 main() {
-    show_welcome
     [ "$(id -u)" -ne 0 ] && { log_error "请使用 root 运行本脚本"; exit 1; }
 
     ask_ssh_port
@@ -331,7 +309,6 @@ main() {
     start_ssh_service
     show_ssh_changes
     show_connection_info
-    log_ok "全部配置完成！"
 }
 
 main "$@"

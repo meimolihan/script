@@ -213,14 +213,15 @@ install_specific_version() {
         return 1
     fi
 
-    echo -e "${gl_bufan}以下为适用于当前架构的版本：${gl_bai}"
+    echo -e "${gl_bai}以下为适用于当前架构的版本：${gl_bai}"
     IFS=$'\n' read -rd '' -a TAG_ARRAY <<<"$MATCH_TAGS"
 
     for i in "${!TAG_ARRAY[@]}"; do
         echo -e "${gl_bufan}$((i+1)). ${gl_huang}${TAG_ARRAY[$i]}${gl_bai}"
     done
 
-    read -r -e -p "$(echo -e "${gl_bufan}请输入要安装的版本编号（输入 ${gl_hong}0${gl_bai} 返回）: ")" CHOICE
+    echo -e "${gl_bufan}——————————————————————————————————————————${gl_bai}"
+    read -r -e -p "$(echo -e "${gl_bai}请输入要安装的版本编号（输入 ${gl_bufan}0${gl_bai} 返回）: ")" CHOICE
     
     if [[ "$CHOICE" == "0" ]]; then
         return
@@ -264,7 +265,7 @@ show_main_menu() {
         echo -e "${gl_bufan}6.  ${gl_bai}启用 BBR + CAKE"
         echo -e "${gl_bufan}7.  ${gl_bai}卸载 BBR 内核"
         echo -e "${gl_bufan}——————————————————————————————————————————${gl_bai}"
-        echo -e "${gl_bufan}0.  ${gl_bai}退出脚本"
+        echo -e "${gl_hong}0.  ${gl_bai}退出脚本"
         echo -e "${gl_bufan}——————————————————————————————————————————${gl_bai}"
         read -r -e -p "$(echo -e "${gl_bai}请输入你的选择: ${gl_bai}")" ACTION
         
@@ -282,8 +283,6 @@ show_main_menu() {
                 echo -e "${gl_zi}>>> 安装指定版本的 BBR${gl_bai}"
                 echo -e "${gl_bufan}——————————————————————————————————————————${gl_bai}"
                 install_specific_version
-                echo -e "${gl_bufan}——————————————————————————————————————————${gl_bai}"
-                break_end
                 ;;
             3)
                 echo -e ""

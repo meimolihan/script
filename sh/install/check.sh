@@ -1,7 +1,7 @@
 #!/bin/bash
 sh_download() {
     local script_path="/etc/profile.d/linux-check.sh"
-    local link_path="/usr/bin/g"
+    local link_path="/usr/local/bin/g"
     
     # 1. 判断系统类型
     if [ -s /etc/os-release ]; then

@@ -15,7 +15,8 @@ gl_huang='\033[33m'
 gl_lan='\033[34m'
 gl_zi='\033[35m'
 gl_bufan='\033[96m'
-gl_bai='\033[0m'
+# gl_bai='\033[0m'
+gl_bai='\033[97m'    # 白色
 
 #-------------- 日志函数 --------------
 log_info()  { echo -e "${gl_lan}[信息]${gl_bai} $*"; }
@@ -26,16 +27,15 @@ log_error() { echo -e "${gl_hong}[错误]${gl_bai} $*" >&2; }
 #-------------- 横幅 --------------
 echo -e "${gl_bai}
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║        通用目录备份脚本（免交互版本） ${gl_huang}★ v2.2 ★${gl_bai}                               ║
-║        自动保留指定数量 · 彩色日志 · 完全免交互                              ║
-║        ${gl_huang}脚本功能:${gl_bai}                                                             ║
-║           - 备份指定源目录                                                   ║
-║           - 自动保留指定数量的备份文件（${gl_huang}默认3个${gl_bai}）                            ║
-║           - 生成带时间戳的备份文件                                           ║
-║           - 完全免交互，适合自动化任务                                       ║
-║                                                                              ║
-║        使用方法: ${gl_zi}bash universal_backup.sh${gl_bai} <${gl_hong}源目录${gl_bai}> <${gl_huang}备份目录${gl_bai}> [${gl_lv}保留备份数量${gl_bai}] ║
-║        使用示例: ${gl_zi}bash universal_backup.sh ${gl_hong}/path/to/source${gl_bai} ${gl_huang}/path/to/backup${gl_bai} ${gl_lv}5${gl_bai}  ║
+║    ${gl_bai}通用目录备份脚本（免交互版本） ${gl_huang}★ v2.3 ★${gl_bai}                               ║
+║    ${gl_bai}自动保留指定数量 · 彩色日志 · 完全免交互                              ║
+║    ${gl_huang}脚本功能:${gl_bai}                                                             ║
+║       ${gl_huang}- ${gl_bai}备份指定源目录                                                   ║
+║       ${gl_huang}- ${gl_bai}自动保留指定数量的备份文件（${gl_huang}默认3个${gl_bai}）                            ║
+║       ${gl_huang}- ${gl_bai}生成带时间戳的备份文件                                           ║
+║       ${gl_huang}- ${gl_bai}完全免交互，适合自动化任务                                       ║
+║    ${gl_bai}使用方法: ${gl_zi}bash universal_backup.sh${gl_bai} <${gl_hong}源目录${gl_bai}> <${gl_huang}备份目录${gl_bai}> [${gl_lv}保留备份数量${gl_bai}] ║
+║    ${gl_bai}使用示例: ${gl_zi}bash universal_backup.sh ${gl_hong}/path/to/source${gl_bai} ${gl_huang}/path/to/backup${gl_bai} ${gl_lv}5${gl_bai}  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 ${gl_bai}"
 
@@ -64,7 +64,7 @@ if [ ! -d "$BACKUP_SRC_DIR" ]; then
 fi
 
 # 创建备份目录（如果不存在）
-log_info "${gl_bai}创建备份目录${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+echo -e "${gl_huang}>>> 创建备份目录中${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
 mkdir -p "$BACKUP_DEST"
 
 if [ $? -ne 0 ]; then
@@ -78,14 +78,16 @@ if [ ! -w "$BACKUP_DEST" ]; then
     exit 1
 fi
 
-echo -e "${gl_bufan}----------------------------------------${gl_bai}"
-log_info "${gl_bai}源目录: ${gl_huang}$BACKUP_SRC_DIR${gl_bai}"
-log_info "${gl_bai}备份目录: ${gl_lv}$BACKUP_DEST${gl_bai}"
-log_info "${gl_bai}保留备份数量: ${gl_huang}$KEEP_COUNT${gl_bai}"
-log_info "${gl_bai}备份前缀: ${gl_huang}$BACKUP_PREFIX${gl_bai}"
-echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
+log_info "${gl_bai}源目录: ${gl_hong}$BACKUP_SRC_DIR${gl_bai}"
+log_info "${gl_bai}备份目录: ${gl_huang}$BACKUP_DEST${gl_bai}"
+log_info "${gl_bai}保留备份数量: ${gl_lv}$KEEP_COUNT${gl_bai}"
+log_info "${gl_bai}备份前缀: ${gl_zi}$BACKUP_PREFIX${gl_bai}"
 
 # 执行备份
+echo -e ""
+echo -e "${gl_huang}>>> 创建备份文件中${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 BACKUP_FILE="${BACKUP_DEST}/${BACKUP_PREFIX}_${TIMESTAMP}.tar.gz"
 log_warn "${gl_bai}正在创建备份文件: ${gl_huang}$(basename "$BACKUP_FILE")${gl_bai}"
 tar -czf "$BACKUP_FILE" -C "$(dirname "$BACKUP_SRC_DIR")" "$(basename "$BACKUP_SRC_DIR")"
@@ -99,9 +101,11 @@ else
     exit 1
 fi
 
-echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+
+echo -e ""
 # 删除旧备份，仅保留指定数量的最新文件
-log_warn "${gl_bai}清理旧备份文件${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+echo -e  "${gl_huang}>>> 清理旧备份文件中${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 cd "$BACKUP_DEST" || exit
 
 # 获取所有匹配的备份文件并按时间排序（最新的在前）
@@ -120,15 +124,18 @@ if [ $FILE_COUNT -gt $KEEP_COUNT ]; then
 fi
 
 # 显示当前备份文件列表
-echo -e "${gl_bufan}----------------------------------------${gl_bai}"
-log_info "当前备份文件列表:"
+echo -e ""
+echo -e  "${gl_huang}>>> 当前备份文件列表"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
+echo -e "  ${gl_lv}•${gl_bai} 备份目录: ${gl_huang}$BACKUP_DEST${gl_bai}"
 ls -1t ${BACKUP_PREFIX}_*.tar.gz 2>/dev/null | head -n $KEEP_COUNT | while read -r file; do
     size=$(du -h "$file" | cut -f1)
     date=$(date -r "$file" "+%Y-%m-%d %H:%M:%S")
     echo -e "  ${gl_zi}•${gl_bai} ${gl_hui}$file${gl_bai}  ${gl_huang}($size)${gl_bai}  ${gl_bufan}$date${gl_bai}"
 done
 
-echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+echo -e ""
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 CURRENT_COUNT=$(ls -1 ${BACKUP_PREFIX}_*.tar.gz 2>/dev/null | wc -l)
 log_ok "备份完成! 总共保留 ${gl_lv}$CURRENT_COUNT${gl_bai} 个备份文件"
-echo -e "${gl_bufan}----------------------------------------${gl_bai}"
+echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"

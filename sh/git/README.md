@@ -184,6 +184,18 @@ bash <(curl -sL script.meimolihan.eu.org/sh/git/git_rm_cached.sh)
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/git_rm_cached.sh)
 ```
 
+### push_repos.sh
+
+- 这个脚本的核心价值在于将需要人工重复执行的Git操作流程化、自动化。想象一下，如果你在一个目录下存放了十几个不同的项目，每天工作结束后，需要逐个进入这些项目的文件夹，检查更改、提交、拉取远程更新、最后推送。这个过程不仅枯燥，还容易出错，比如漏掉某个仓库或写错提交命令。
+
+```bash
+bash <(curl -sL script.meimolihan.eu.org/sh/git/push_repos.sh) /vol1/1000/compose "日常更新" "HD-Icons|hd-Icons"
+```
+
+```bash
+bash <(curl -sL gitee.com/meimolihan/script/raw/master/sh/git/push_repos.sh) /vol1/1000/compose "日常更新" "HD-Icons|hd-Icons"
+```
+
 ## 本地脚本（`Git Bash 下载命令`）
 
 ```bash

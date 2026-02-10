@@ -145,14 +145,13 @@ declare -A PRESET_PORTS=(
 )
 
 
+install wget
+install nginx
+install rsync
 clear
 echo ""
 echo -e "${gl_huang}>>> 安装/下载依赖文件中${gl_hong}.${gl_huang}.${gl_lv}.${gl_bai}"
 echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
-
-install wget
-install nginx
-install rsync
 echo ""
 
 # ========== 下载依赖（存在则跳过） ==========
@@ -187,7 +186,12 @@ echo -e "${gl_zi}>>> Nginx 配置生成中${gl_hong}.${gl_huang}.${gl_lv}.${gl_b
 # ========== 1. 服务名称配置 ==========
 echo -e "${gl_bufan}————————————————————————————————————————————————${gl_bai}"
 echo -e "${gl_zi}>>> 步骤 ${gl_bai}(${gl_huang}1${gl_hong}/${gl_huang}9${gl_bai}): 服务名称配置"
-read -r -e -p "$(echo -e "${gl_bai}请输入服务名称（默认名称 ${gl_huang}aaaa${gl_bai}) : ")" SVC_NAME
+read -r -e -p "$(echo -e "${gl_bai}请输入服务名称（默认名称 ${gl_huang}aaaa${gl_bai})(${gl_bufan}0${gl_bai}返回) : ")" SVC_NAME
+
+if [[ -z $SVC_NAME || $SVC_NAME == "0" ]]; then
+    exit
+fi
+
 SVC_NAME=${SVC_NAME:-aaaa}
 echo -e "${gl_lv}✓ ${gl_bai}服务名称: ${gl_lv}$SVC_NAME${gl_bai}"
 echo ""
