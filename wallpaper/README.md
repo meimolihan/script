@@ -6,6 +6,8 @@
 
 ```bash
 bash <(curl -sL gitee.com/meimolihan/script/raw/master/wallpaper/wallpaper-directory-stats.sh)
+
+bash <(curl -sL script.meimolihan.eu.org/wallpaper/wallpaper-directory-stats.sh)
 ```
 
 ## rename_webp_pc.sh
